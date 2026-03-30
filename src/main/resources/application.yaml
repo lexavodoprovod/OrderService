@@ -1,4 +1,14 @@
 spring:
   application:
     name: OrderService
-
+  liquibase:
+    enabled: false
+  datasource:
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+server:
+  port: 8080
