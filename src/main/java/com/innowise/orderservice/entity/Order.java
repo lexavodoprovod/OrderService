@@ -12,7 +12,6 @@ import java.util.List;
 @Getter@Setter
 @Builder
 public class Order extends BaseEntity{
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
