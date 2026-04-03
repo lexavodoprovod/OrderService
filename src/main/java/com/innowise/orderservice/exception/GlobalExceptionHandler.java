@@ -52,17 +52,17 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(exception, status);
     }
 
-    @ExceptionHandler(UserServiceException.class)
-    public ResponseEntity<ErrorDetails> handleNotFound(UserServiceException e) {
-        HttpStatus status = HttpStatus.SERVICE_UNAVAILABLE;
-        ErrorDetails exception = ErrorDetails.builder()
-                .message(e.getMessage())
-                .errorName(status.getReasonPhrase())
-                .httpStatus(status.value())
-                .timestamp(LocalDateTime.now())
-                .build();
-        return  new ResponseEntity<>(exception, status);
-    }
+//    @ExceptionHandler(UserServiceException.class)
+//    public ResponseEntity<ErrorDetails> handleNotFound(UserServiceException e) {
+//        HttpStatus status = HttpStatus.SERVICE_UNAVAILABLE;
+//        ErrorDetails exception = ErrorDetails.builder()
+//                .message(e.getMessage())
+//                .errorName(status.getReasonPhrase())
+//                .httpStatus(status.value())
+//                .timestamp(LocalDateTime.now())
+//                .build();
+//        return  new ResponseEntity<>(exception, status);
+//    }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorDetails> handleNotFound(EntityNotFoundException e) {

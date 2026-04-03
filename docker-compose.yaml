@@ -9,6 +9,7 @@ services:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
+      - USER_SERVICE_URL=${USER_SERVICE_URL}
     depends_on:
        order-db:
         condition: service_healthy
@@ -27,3 +28,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+networks:
+  default:
+    external: true
+    name: micro-net

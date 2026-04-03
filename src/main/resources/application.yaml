@@ -2,7 +2,7 @@ spring:
   application:
     name: OrderService
   liquibase:
-    enabled: false
+    enabled: true
   datasource:
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}

@@ -7,9 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(name = "user-client",
-        url = "${USER_SERVICE_URL}",
-        path = "/users",
-        fallback = UserClientFallBack.class)
+        url = "http://user-service-app:8080",
+        path = "/users")
 public interface UserClient {
 
     @GetMapping("/{id}")
