@@ -401,9 +401,9 @@ class OrderServiceImplTest {
 
             assertNotNull(result);
             assertEquals(200L, existingOrder.getTotalPrice());
-            assertTrue(existingOrder.getOrderItems().size() == 1);
+            assertEquals(existingOrder.getOrderItems().size() ,1);
 
-            verify(orderMapper).updateOrder(eq(requestDto), eq(existingOrder));
+            verify(orderMapper).updateOrder(requestDto, existingOrder);
             verify(orderDao).save(existingOrder);
         }
 
@@ -417,10 +417,15 @@ class OrderServiceImplTest {
         @Test
         @DisplayName("Should throw OrderNotFoundException when order does not exist")
         void shouldThrowExceptionWhenOrderNotFound() {
-            when(orderDao.findById(1L)).thenReturn(Optional.empty());
+            Long orderId = 1L;
+            OrderRequestDto requestDto = new OrderRequestDto(); // Вынесли создание сюда
+
+            when(orderDao.findById(orderId)).thenReturn(Optional.empty());
 
             assertThrows(OrderNotFoundException.class,
-                    () -> orderService.updateOrder(1L, new OrderRequestDto()));
+                    () -> orderService.updateOrder(orderId, requestDto));
+
+            verify(orderDao).findById(orderId);
         }
 
         @Test

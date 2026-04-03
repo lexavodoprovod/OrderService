@@ -120,7 +120,6 @@ class OrderControllerTest extends BaseIT{
         @Test
         @DisplayName("Should return order with items and user data - Success")
         void shouldReturnOrderSuccessfully() throws Exception {
-            Item item = itemDao.save(Item.builder().name("Laptop").price(100000L).build());
             Order order = orderDao.save(Order.builder()
                     .userId(1L)
                     .totalPrice(100000L)
