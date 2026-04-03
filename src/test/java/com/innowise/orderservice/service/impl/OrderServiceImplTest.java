@@ -401,7 +401,7 @@ class OrderServiceImplTest {
 
             assertNotNull(result);
             assertEquals(200L, existingOrder.getTotalPrice());
-            assertEquals(existingOrder.getOrderItems().size() ,1);
+            assertEquals(1 ,existingOrder.getOrderItems().size());
 
             verify(orderMapper).updateOrder(requestDto, existingOrder);
             verify(orderDao).save(existingOrder);
@@ -418,7 +418,7 @@ class OrderServiceImplTest {
         @DisplayName("Should throw OrderNotFoundException when order does not exist")
         void shouldThrowExceptionWhenOrderNotFound() {
             Long orderId = 1L;
-            OrderRequestDto requestDto = new OrderRequestDto(); // Вынесли создание сюда
+            OrderRequestDto requestDto = new OrderRequestDto();
 
             when(orderDao.findById(orderId)).thenReturn(Optional.empty());
 
@@ -431,11 +431,15 @@ class OrderServiceImplTest {
         @Test
         @DisplayName("Should throw OrderNotFoundException when order is marked as deleted")
         void shouldThrowExceptionWhenOrderIsDeleted() {
-            Order deletedOrder = Order.builder().id(1L).deleted(true).build();
+            Long orderId = 1L;
+            Order deletedOrder = Order.builder().id(orderId).deleted(true).build();
+            OrderRequestDto requestDto = new OrderRequestDto();
+
+
             when(orderDao.findById(1L)).thenReturn(Optional.of(deletedOrder));
 
             assertThrows(OrderNotFoundException.class,
-                    () -> orderService.updateOrder(1L, new OrderRequestDto()));
+                    () -> orderService.updateOrder(orderId, requestDto));
 
             verify(orderMapper, never()).updateOrder(any(), any());
         }
