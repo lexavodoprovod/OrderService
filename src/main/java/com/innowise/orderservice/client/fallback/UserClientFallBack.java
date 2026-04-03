@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component;
 public class UserClientFallBack implements UserClient {
     @Override
     public UserDto getUserById(Long id) {
-//        throw new UserServiceException();
-        UserDto userDto = new UserDto();
-        userDto.setId(id);
-        userDto.setEmail("unknown");
-        userDto.setName("unknown");
-        userDto.setSurname("unknown");
-        userDto.setBirthDate(null);
-        userDto.setActive(true);
-        return userDto;
+        throw new UserServiceException();
+//        UserDto userDto = new UserDto();
+//        userDto.setId(id);
+//        userDto.setEmail("unknown");
+//        userDto.setName("unknown");
+//        userDto.setSurname("unknown");
+//        userDto.setBirthDate(null);
+//        userDto.setActive(true);
+//        return userDto;
     }
 }

@@ -10,6 +10,7 @@ import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
 import com.innowise.orderservice.entity.Status;
 import com.innowise.orderservice.exception.ItemNotFoundException;
+import com.innowise.orderservice.exception.OrderCancelledException;
 import com.innowise.orderservice.exception.OrderNotFoundException;
 import com.innowise.orderservice.exception.OrderNullParametrException;
  import com.innowise.orderservice.mapper.OrderMapper;
@@ -118,6 +119,12 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderDao.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException(id));
 
+        Status status = order.getStatus();
+
+        if(status == Status.CANCELLED){
+            throw new OrderCancelledException();
+        }
+
         Long userId = order.getUserId();
 
         order.setStatus(Status.PAID);
@@ -171,6 +178,10 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = orderDao.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException(id));
+
+        if(order.isDeleted()){
+            throw new OrderNotFoundException(id);
+        }
 
         order.setDeleted(true);
 

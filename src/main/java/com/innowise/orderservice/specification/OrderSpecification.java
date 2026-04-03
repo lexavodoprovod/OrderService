@@ -36,7 +36,7 @@ public class OrderSpecification {
 
     public static Specification<Order> byStatus(List<Status> statuses) {
         return (root, query, criteriaBuilder) ->{
-            if(statuses.isEmpty() || statuses == null){
+            if(statuses == null || statuses.isEmpty() ){
                 return criteriaBuilder.conjunction();
             }
 
