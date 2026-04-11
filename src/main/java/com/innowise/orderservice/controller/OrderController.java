@@ -57,6 +57,21 @@ public class OrderController {
     }
 
     /**
+     * Retrieves a paginated list of orders by userId.
+     * @param id user identifier
+     * @param pageable pagination parameters, defaults to size {@value #PAGINATION_SIZE} and sort by {@value #SORT_BY}.
+     * @return {@link ResponseEntity} containing a {@link Page} of {@link OrderResponseDto}.
+     */
+    @GetMapping("/user/{id}")
+    public ResponseEntity<Page<OrderResponseDto>> getOrdersByUserId(
+            @PathVariable Long id,
+            @PageableDefault(size = PAGINATION_SIZE, sort = SORT_BY)Pageable pageable) {
+
+        Page<OrderResponseDto> orderResponseDtoPage = orderService.getOrdersByUserId(id, pageable);
+        return ResponseEntity.ok(orderResponseDtoPage);
+    }
+
+    /**
      * Retrieves a paginated and filtered list of orders.
      *
      * @param from     optional start date (inclusive) in ISO format (yyyy-MM-dd).

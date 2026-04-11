@@ -3,6 +3,7 @@ package com.innowise.orderservice.exception;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -14,7 +15,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final ObjectMapper mapper;
 
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<ErrorDetails> handleFeignException(FeignException e) {
@@ -23,7 +27,6 @@ public class GlobalExceptionHandler {
         String message;
 
         try {
-            ObjectMapper mapper = new ObjectMapper();
 
             Map<String, Object> map = mapper.readValue(errorBody, Map.class);
 

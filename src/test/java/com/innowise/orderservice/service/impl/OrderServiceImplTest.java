@@ -9,10 +9,7 @@ import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
 import com.innowise.orderservice.entity.Status;
-import com.innowise.orderservice.exception.ItemNotFoundException;
-import com.innowise.orderservice.exception.OrderCancelledException;
-import com.innowise.orderservice.exception.OrderNotFoundException;
-import com.innowise.orderservice.exception.OrderNullParametrException;
+import com.innowise.orderservice.exception.*;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.repository.ItemDao;
 import com.innowise.orderservice.repository.OrderDao;
@@ -502,7 +499,7 @@ class OrderServiceImplTest {
             verify(orderDao, times(1)).findById(orderId);
         }
         @Test
-        @DisplayName("Should throw OrderNotFoundException when order is already deleted")
+        @DisplayName("Should throw OrderSoftDeleteException when order is already deleted")
         void shouldThrowExceptionWhenOrderAlreadyDeleted() {
             Long orderId = 1L;
             Order alreadyDeletedOrder = Order.builder()
@@ -512,7 +509,7 @@ class OrderServiceImplTest {
 
             when(orderDao.findById(orderId)).thenReturn(Optional.of(alreadyDeletedOrder));
 
-            assertThrows(OrderNotFoundException.class, () -> orderService.softdeleteOrder(orderId));
+            assertThrows(OrderSoftDeleteException.class, () -> orderService.softdeleteOrder(orderId));
 
             verify(orderDao, times(1)).findById(orderId);
         }

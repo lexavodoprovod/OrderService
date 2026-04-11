@@ -1,7 +1,7 @@
 package com.innowise.orderservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.innowise.orderservice.client.UserClient;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.innowise.orderservice.dto.OrderItemRequestDto;
 import com.innowise.orderservice.dto.OrderRequestDto;
 import com.innowise.orderservice.dto.UserDto;
@@ -9,7 +9,6 @@ import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
 import com.innowise.orderservice.entity.Status;
-import com.innowise.orderservice.exception.UserServiceException;
 import com.innowise.orderservice.repository.ItemDao;
 import com.innowise.orderservice.repository.OrderDao;
 import com.innowise.orderservice.repository.OrderItemDao;
@@ -18,19 +17,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.when;
-
 
 class OrderControllerTest extends BaseIT{
 
@@ -39,9 +39,6 @@ class OrderControllerTest extends BaseIT{
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @MockitoBean
-    private UserClient userClient;
 
     @Autowired
     private ItemDao itemDao;
@@ -57,6 +54,7 @@ class OrderControllerTest extends BaseIT{
         orderDao.deleteAll();
         itemDao.deleteAll();
         orderItemDao.deleteAll();
+        wireMock.resetAll();
     }
 
     @Nested
@@ -72,16 +70,20 @@ class OrderControllerTest extends BaseIT{
                     .price(50000L)
                     .build());
 
+
             Long userId = 1L;
             OrderItemRequestDto itemRequest = new OrderItemRequestDto(item.getId(), 2);
             OrderRequestDto orderRequest = new OrderRequestDto(userId, List.of(itemRequest));
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/orders")
-                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            wireMock.stubFor(get(urlEqualTo("/users/" + userId))
+                    .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
+
+            mockMvc.perform(MockMvcRequestBuilders.post("/orders")
+                            .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(orderRequest)))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.totalPrice").value(100000))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.orderItems.length()").value(1));
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalPrice").value(100000))
+                    .andExpect(jsonPath("$.orderItems.length()").value(1));
 
             List<Order> orders = orderDao.findAll();
             assertEquals(1, orders.size());
@@ -94,10 +96,10 @@ class OrderControllerTest extends BaseIT{
         void shouldReturnBadRequestWhenNoItems() throws Exception {
             OrderRequestDto emptyOrder = new OrderRequestDto(1L, List.of());
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/orders")
-                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            mockMvc.perform(MockMvcRequestBuilders.post("/orders")
+                            .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(emptyOrder)))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -106,10 +108,10 @@ class OrderControllerTest extends BaseIT{
             OrderItemRequestDto missingItem = new OrderItemRequestDto(999L, 1);
             OrderRequestDto orderRequest = new OrderRequestDto(1L, List.of(missingItem));
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/orders")
-                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            mockMvc.perform(MockMvcRequestBuilders.post("/orders")
+                            .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(orderRequest)))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
+                    .andExpect(status().isNotFound());
         }
     }
 
@@ -120,59 +122,95 @@ class OrderControllerTest extends BaseIT{
         @Test
         @DisplayName("Should return order with items and user data - Success")
         void shouldReturnOrderSuccessfully() throws Exception {
+            Long userId = 1L;
             Order order = orderDao.save(Order.builder()
-                    .userId(1L)
+                    .userId(userId)
                     .totalPrice(100000L)
                     .status(Status.NEW)
                     .build());
 
-            UserDto mockUser = UserDto.builder().id(1L).name("Nikita").build();
-            when(userClient.getUserById(1L)).thenReturn(mockUser);
+            UserDto mockUser = UserDto.builder().id(userId).name("Nikita").build();
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders/{id}", order.getId()))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.id").value(order.getId()));
+            wireMock.stubFor(WireMock.get(urlEqualTo("/users/" + userId))
+                    .willReturn(okJson(objectMapper.writeValueAsString(mockUser))));
+
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders/{id}", order.getId()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(order.getId()));
         }
 
         @Test
         @DisplayName("Should return 404 when order is not found in database")
         void shouldReturn404WhenNotFound() throws Exception {
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders/{id}", 999L))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders/{id}", 999L))
+                    .andExpect(status().isNotFound());
         }
 
         @Test
         @DisplayName("Should return 400 when ID is not a number")
         void shouldReturn400WhenIdTypeIsInvalid() throws Exception {
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders/invalid-id"))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders/invalid-id"))
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
         @DisplayName("Should handle Feign Client failure (User Service Down)")
         void shouldHandleUserServiceFailure() throws Exception {
-            Order order = orderDao.save(Order.builder().userId(1L).totalPrice(0L).build());
+            Long userId = 1L;
+            Order order = orderDao.save(Order.builder()
+                    .userId(userId)
+                    .totalPrice(0L)
+                    .build());
 
-            when(userClient.getUserById(1L)).thenThrow(new UserServiceException());
+            wireMock.stubFor(WireMock.get(urlEqualTo("/users/" +  userId))
+                    .willReturn(serviceUnavailable()));
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders/{id}", order.getId()))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isServiceUnavailable());
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders/{id}", order.getId()))
+                    .andExpect(MockMvcResultMatchers.status().isServiceUnavailable());
         }
 
         @Test
         @DisplayName("Should return order even if it's marked as deleted (if business logic allows)")
         void shouldReturnDeletedOrder() throws Exception {
+            Long userId = 1L;
             Order deletedOrder = orderDao.save(Order.builder()
-                    .userId(1L)
+                    .userId(userId)
                     .totalPrice(10L)
                     .deleted(true)
                     .build());
 
-            when(userClient.getUserById(1L)).thenReturn(new UserDto());
+            wireMock.stubFor(WireMock.get(urlEqualTo("/users/" + userId))
+                    .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders/{id}", deletedOrder.getId()))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.deleted").value(true));
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders/{id}", deletedOrder.getId()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.deleted").value(true));
+        }
+    }
+
+    @Nested
+    @DisplayName("Get Orders By Id Integration Tests")
+    class GetOrdersByUserId{
+
+        @Test
+        @DisplayName("Should return all orders by user id")
+        void shouldReturnAllOrdersByUserId() throws Exception {
+            Long firstUserId = 1L;
+            Long secondUserId = 2L;
+
+            saveOrder(firstUserId, Status.NEW, LocalDate.now());
+            saveOrder(firstUserId, Status.PAID, LocalDate.now());
+            saveOrder(secondUserId, Status.NEW, LocalDate.now());
+
+
+            wireMock.stubFor(get(urlEqualTo("/users/" + firstUserId))
+                    .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders/user/{id}", firstUserId))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(2));
         }
     }
 
@@ -180,90 +218,84 @@ class OrderControllerTest extends BaseIT{
     @DisplayName("Get All Orders Integration Tests")
     class GetAllOrdersTests {
 
-        @BeforeEach
-        void setUp() {
-            orderDao.deleteAll();
-            itemDao.deleteAll();
-        }
-
         @Test
         @DisplayName("Should return all orders with default pagination")
         void shouldReturnAllOrdersSuccessfully() throws Exception {
             saveOrder(10L, Status.NEW, LocalDate.now());
             saveOrder(20L, Status.PAID, LocalDate.now());
 
-            when(userClient.getUserById(anyLong())).thenReturn(new UserDto());
+            wireMock.stubFor(WireMock.get(urlMatching("/users/[0-9]+"))
+                    .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders"))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.content.length()").value(2))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.totalElements").value(2));
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders"))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.totalElements").value(2));
         }
 
         @Test
         @DisplayName("Should filter orders by date range using current time")
         void shouldFilterByDateRange() throws Exception {
-            saveOrder(1L, Status.NEW, LocalDate.now());
+            Long userId = 1L;
+            saveOrder(userId, Status.NEW, LocalDate.now());
 
             String from = LocalDate.now().minusDays(1).toString();
             String to = LocalDate.now().plusDays(1).toString();
 
-            when(userClient.getUserById(anyLong())).thenReturn(new UserDto());
+            wireMock.stubFor(WireMock.get(urlEqualTo("/users/" +  userId))
+                    .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders")
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders")
                             .param("from", from)
                             .param("to", to))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.content.length()").value(1));
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(1));
         }
 
         @Test
         @DisplayName("Should filter orders by multiple statuses")
         void shouldFilterByStatuses() throws Exception {
-            saveOrder(1L, Status.NEW, LocalDate.now());
-            saveOrder(1L, Status.PAID, LocalDate.now());
-            saveOrder(1L, Status.CANCELLED, LocalDate.now());
+            Long userId = 1L;
 
-            when(userClient.getUserById(anyLong())).thenReturn(new UserDto());
+            saveOrder(userId, Status.NEW, LocalDate.now());
+            saveOrder(userId, Status.PAID, LocalDate.now());
+            saveOrder(userId, Status.CANCELLED, LocalDate.now());
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders")
+            wireMock.stubFor(WireMock.get(urlEqualTo("/users/" + userId))
+                    .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders")
                             .param("statuses", "NEW,PAID"))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.content.length()").value(2));
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(2));
         }
 
         @Test
         @DisplayName("Should not return soft-deleted orders")
         void shouldHideDeletedOrders() throws Exception {
-            Order active = Order.builder().userId(1L).totalPrice(100L).deleted(false).build();
-            Order deleted = Order.builder().userId(1L).totalPrice(200L).deleted(true).build();
+            Long userId = 1L;
+            Order active = Order.builder().userId(userId).totalPrice(100L).deleted(false).build();
+            Order deleted = Order.builder().userId(userId).totalPrice(200L).deleted(true).build();
             orderDao.saveAll(List.of(active, deleted));
 
-            when(userClient.getUserById(anyLong())).thenReturn(new UserDto());
+            wireMock.stubFor(WireMock.get(urlEqualTo("/users/" + userId))
+                    .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders"))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.content.length()").value(1))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.content[0].deleted").value(false));
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders"))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.content.length()").value(1))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.content[0].deleted").value(false));
         }
 
         @Test
         @DisplayName("Should return 400 when date format is invalid")
         void shouldReturnBadRequestForInvalidDate() throws Exception {
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/orders")
+            mockMvc.perform(MockMvcRequestBuilders.get("/orders")
                             .param("from", "01-01-2026"))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
         }
 
-        private void saveOrder(Long userId, Status status, LocalDate date) {
-            Order order = Order.builder()
-                    .userId(userId)
-                    .status(status)
-                    .totalPrice(1000L)
-                    .build();
-            order.setCreatedAt(date.atStartOfDay());
-            orderDao.save(order);
-        }
+
     }
 
     @Nested
@@ -274,25 +306,29 @@ class OrderControllerTest extends BaseIT{
         @DisplayName("Should successfully update order items and total price")
         @Transactional
         void shouldUpdateOrderSuccessfully() throws Exception {
+            Long userId = 1L;
             Item laptop = itemDao.save(Item.builder().name("Laptop").price(100000L).build());
             Item mouse = itemDao.save(Item.builder().name("Mouse").price(2000L).build());
 
-            Order order = Order.builder().userId(1L).status(Status.NEW).totalPrice(100000L).build();
+            Order order = Order.builder().userId(userId).status(Status.NEW).totalPrice(100000L).build();
             order = orderDao.save(order);
             orderItemDao.save(OrderItem.builder().order(order).item(laptop).quantity(1).build());
 
             OrderItemRequestDto updateItem = new OrderItemRequestDto(mouse.getId(), 2);
-            OrderRequestDto updateRequest = new OrderRequestDto(1L, List.of(updateItem));
+            OrderRequestDto updateRequest = new OrderRequestDto(userId, List.of(updateItem));
 
-            when(userClient.getUserById(1L)).thenReturn(UserDto.builder().id(1L).name("Nikita").build());
+            UserDto userDto = UserDto.builder().id(userId).name("Nikita").build();
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/orders/{id}", order.getId())
-                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            wireMock.stubFor(WireMock.get(urlEqualTo("/users/" + userId))
+                    .willReturn(okJson(objectMapper.writeValueAsString(userDto))));
+
+            mockMvc.perform(MockMvcRequestBuilders.put("/orders/{id}", order.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(updateRequest)))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.totalPrice").value(4000))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.orderItems.length()").value(1))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.orderItems[0].itemDto.name").value("Mouse"));
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.totalPrice").value(4000))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.orderItems.length()").value(1))
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.orderItems[0].itemDto.name").value("Mouse"));
 
             Order updatedOrder = orderDao.findById(order.getId()).orElseThrow();
             assertEquals(4000L, updatedOrder.getTotalPrice());
@@ -304,10 +340,10 @@ class OrderControllerTest extends BaseIT{
         void shouldReturn404WhenOrderNotFound() throws Exception {
             OrderRequestDto request = new OrderRequestDto(1L, List.of(new OrderItemRequestDto(1L, 1)));
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/orders/{id}", 999L)
-                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            mockMvc.perform(MockMvcRequestBuilders.put("/orders/{id}", 999L)
+                            .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
+                    .andExpect(MockMvcResultMatchers.status().isNotFound());
         }
 
         @Test
@@ -315,10 +351,10 @@ class OrderControllerTest extends BaseIT{
         void shouldReturn400WhenValidationFails() throws Exception {
             OrderRequestDto invalidRequest = new OrderRequestDto(1L, List.of());
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/orders/{id}", 1L)
-                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            mockMvc.perform(MockMvcRequestBuilders.put("/orders/{id}", 1L)
+                            .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(invalidRequest)))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
+                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
         }
 
         @Test
@@ -328,10 +364,10 @@ class OrderControllerTest extends BaseIT{
 
             OrderRequestDto requestWithGhostItem = new OrderRequestDto(1L, List.of(new OrderItemRequestDto(999L, 1)));
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/orders/{id}", order.getId())
-                            .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            mockMvc.perform(MockMvcRequestBuilders.put("/orders/{id}", order.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(requestWithGhostItem)))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
+                    .andExpect(MockMvcResultMatchers.status().isNotFound());
         }
     }
 
@@ -342,17 +378,21 @@ class OrderControllerTest extends BaseIT{
         @Test
         @DisplayName("Should successfully change status to PAID and return 200")
         void shouldSetStatusToPaidSuccessfully() throws Exception {
+            Long userId = 1L;
             Order order = orderDao.save(Order.builder()
-                    .userId(1L)
+                    .userId(userId)
                     .status(Status.NEW)
                     .totalPrice(5000L)
                     .build());
 
-            when(userClient.getUserById(1L)).thenReturn(UserDto.builder().id(1L).name("Nikita").build());
+            UserDto userDto = UserDto.builder().id(userId).name("Nikita").build();
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/orders/{id}/paid", order.getId()))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.status").value("PAID"));
+            wireMock.stubFor(WireMock.get(urlEqualTo("/users/" + userId))
+                    .willReturn(okJson(objectMapper.writeValueAsString(userDto))));
+
+            mockMvc.perform(MockMvcRequestBuilders.patch("/orders/{id}/paid", order.getId()))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("PAID"));
 
             Order updatedOrder = orderDao.findById(order.getId()).orElseThrow();
             assertEquals(Status.PAID, updatedOrder.getStatus());
@@ -361,28 +401,29 @@ class OrderControllerTest extends BaseIT{
         @Test
         @DisplayName("Should return 404 when trying to pay for non-existent order")
         void shouldReturn404WhenOrderNotFound() throws Exception {
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/orders/{id}/paid", 999L))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
+            mockMvc.perform(MockMvcRequestBuilders.patch("/orders/{id}/paid", 999L))
+                    .andExpect(MockMvcResultMatchers.status().isNotFound());
         }
 
         @Test
         @DisplayName("Should return 400 when order is already CANCELLED")
         void shouldReturn400WhenOrderIsCancelled() throws Exception {
+            Long userId = 1L;
             Order cancelledOrder = orderDao.save(Order.builder()
-                    .userId(1L)
+                    .userId(userId)
                     .status(Status.CANCELLED)
                     .totalPrice(100L)
                     .build());
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/orders/{id}/paid", cancelledOrder.getId()))
+            mockMvc.perform(MockMvcRequestBuilders.patch("/orders/{id}/paid", cancelledOrder.getId()))
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
         }
 
         @Test
         @DisplayName("Should return 400 when ID format is invalid")
         void shouldReturn400WhenIdIsInvalid() throws Exception {
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/orders/abc/paid"))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
+            mockMvc.perform(MockMvcRequestBuilders.patch("/orders/abc/paid"))
+                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
         }
     }
 
@@ -402,8 +443,8 @@ class OrderControllerTest extends BaseIT{
             order = orderDao.save(order);
             Long id = order.getId();
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/orders/{id}", id))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNoContent());
+            mockMvc.perform(MockMvcRequestBuilders.delete("/orders/{id}", id))
+                    .andExpect(MockMvcResultMatchers.status().isNoContent());
 
             Optional<Order> deletedOrder = orderDao.findById(id);
             assertTrue(deletedOrder.isPresent(), "Order should still exist in DB (Soft Delete)");
@@ -413,8 +454,8 @@ class OrderControllerTest extends BaseIT{
         @Test
         @DisplayName("Should return 404 when trying to delete non-existent order")
         void shouldReturn404WhenOrderNotFound() throws Exception {
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/orders/{id}", 999L))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
+            mockMvc.perform(MockMvcRequestBuilders.delete("/orders/{id}", 999L))
+                    .andExpect(MockMvcResultMatchers.status().isNotFound());
         }
 
         @Test
@@ -425,16 +466,26 @@ class OrderControllerTest extends BaseIT{
                     .deleted(true)
                     .build());
 
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/orders/{id}", alreadyDeleted.getId()))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
+            mockMvc.perform(MockMvcRequestBuilders.delete("/orders/{id}", alreadyDeleted.getId()))
+                    .andExpect(MockMvcResultMatchers.status().isConflict());
         }
 
         @Test
         @DisplayName("Should return 400 when ID format is invalid")
         void shouldReturn400WhenIdIsInvalid() throws Exception {
-            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/orders/not-a-number"))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
+            mockMvc.perform(MockMvcRequestBuilders.delete("/orders/not-a-number"))
+                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
         }
+    }
+
+    private void saveOrder(Long userId, Status status, LocalDate date) {
+        Order order = Order.builder()
+                .userId(userId)
+                .status(status)
+                .totalPrice(1000L)
+                .build();
+        order.setCreatedAt(date.atStartOfDay());
+        orderDao.save(order);
     }
 
 }

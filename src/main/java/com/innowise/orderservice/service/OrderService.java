@@ -35,6 +35,14 @@ public interface OrderService {
     OrderResponseDto getOrderById(Long id);
 
     /**
+     * Retrieves a paginated list of orders by user identifier.
+     * @param userId user identifier
+     * @param pageable pagination and sorting configuration.
+     * @return a {@link Page} of {@link OrderResponseDto}.
+     */
+    Page<OrderResponseDto> getOrdersByUserId(Long userId, Pageable pageable);
+
+    /**
      * Retrieves a paginated list of orders filtered by various criteria.
      *
      * @param from     the start date of the period to filter orders (inclusive).

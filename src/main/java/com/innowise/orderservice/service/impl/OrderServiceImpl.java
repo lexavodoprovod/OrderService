@@ -9,11 +9,8 @@ import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
 import com.innowise.orderservice.entity.Status;
-import com.innowise.orderservice.exception.ItemNotFoundException;
-import com.innowise.orderservice.exception.OrderCancelledException;
-import com.innowise.orderservice.exception.OrderNotFoundException;
-import com.innowise.orderservice.exception.OrderNullParametrException;
- import com.innowise.orderservice.mapper.OrderMapper;
+import com.innowise.orderservice.exception.*;
+import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.repository.ItemDao;
 import com.innowise.orderservice.repository.OrderDao;
 import com.innowise.orderservice.service.OrderService;
@@ -89,6 +86,22 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Page<OrderResponseDto> getOrdersByUserId(Long userId, Pageable pageable) {
+
+        if(pageable == null || userId == null){
+            throw new OrderNullParametrException();
+        }
+
+        Page<Order> ordersByUserIdPage = orderDao.findAllByUserIdAndDeletedFalse(userId, pageable);
+
+        return ordersByUserIdPage.map(order -> {
+            OrderResponseDto dto = orderMapper.toOrderDto(order);
+            enrichWithUser(dto, order.getUserId());
+            return dto;
+        });
+    }
+
+    @Override
     public Page<OrderResponseDto> getAllOrders(LocalDate from, LocalDate to, List<Status> statuses, Pageable pageable) {
         if(pageable == null){
             throw new OrderNullParametrException();
@@ -137,6 +150,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponseDto updateOrder(Long orderId, OrderRequestDto orderRequestDto) {
         if(orderRequestDto == null){
             throw new OrderNullParametrException();
@@ -180,7 +194,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new OrderNotFoundException(id));
 
         if(order.isDeleted()){
-            throw new OrderNotFoundException(id);
+            throw new OrderSoftDeleteException(id);
         }
 
         order.setDeleted(true);
