@@ -5,7 +5,6 @@ import com.innowise.orderservice.dto.OrderResponseDto;
 import com.innowise.orderservice.entity.Order;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 
 @Mapper(componentModel = "spring", uses = {OrderItemMapper.class})
 public interface OrderMapper {
@@ -16,9 +15,4 @@ public interface OrderMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", ignore = true)
     Order toOrder(OrderRequestDto requestOrderDto);
-
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "userId", ignore = true)
-    @Mapping(target = "orderItems", ignore = true)
-    void updateOrder(OrderRequestDto requestOrderDto, @MappingTarget Order order);
 }

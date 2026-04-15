@@ -81,7 +81,7 @@ class OrderControllerTest extends BaseIT{
             mockMvc.perform(MockMvcRequestBuilders.post("/orders")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(orderRequest)))
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.totalPrice").value(100000))
                     .andExpect(jsonPath("$.orderItems.length()").value(1));
 

@@ -163,9 +163,9 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderNotFoundException(orderId);
         }
 
-        orderMapper.updateOrder(orderRequestDto, order);
-
         List<OrderItemRequestDto> orderItemRequestDtos = orderRequestDto.getOrderItems();
+
+        order.getOrderItems().clear();
 
         Long totalPrice = calculateTotalPrice(orderItemRequestDtos, order);
         order.setTotalPrice(totalPrice);

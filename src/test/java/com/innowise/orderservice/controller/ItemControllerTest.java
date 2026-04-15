@@ -41,7 +41,7 @@ class ItemControllerTest extends BaseIT {
             mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/items")
                             .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(itemDto)))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isCreated())
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.id").isNotEmpty())
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.name").value("Drill"))
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.price").value(2500));
