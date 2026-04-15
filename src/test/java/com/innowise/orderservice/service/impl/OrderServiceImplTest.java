@@ -400,7 +400,6 @@ class OrderServiceImplTest {
             assertEquals(200L, existingOrder.getTotalPrice());
             assertEquals(1 ,existingOrder.getOrderItems().size());
 
-//            verify(orderMapper).updateOrder(requestDto, existingOrder);
             verify(orderDao).save(existingOrder);
         }
 
@@ -438,7 +437,6 @@ class OrderServiceImplTest {
             assertThrows(OrderNotFoundException.class,
                     () -> orderService.updateOrder(orderId, requestDto));
 
-//            verify(orderMapper, never()).updateOrder(any(), any());
         }
 
         @Test
