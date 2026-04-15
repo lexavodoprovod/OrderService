@@ -87,6 +87,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public boolean deleteItemById(Long id) {
         if(id == null){
             throw new ItemNullParameterException();

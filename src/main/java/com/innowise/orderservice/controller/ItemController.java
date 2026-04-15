@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,12 +31,12 @@ public class ItemController {
      * Creates a new item.
      *
      * @param itemDto the item data to be saved, validated by {@link Valid}.
-     * @return {@link ResponseEntity} containing the created {@link ItemDto} and HTTP 200 OK.
+     * @return {@link ResponseEntity} containing the created {@link ItemDto} and HTTP 201 CREATED.
      */
     @PostMapping
     public ResponseEntity<ItemDto> createItem(@Valid @RequestBody ItemDto itemDto) {
         ItemDto item = itemService.createItem(itemDto);
-        return ResponseEntity.ok(item);
+        return ResponseEntity.status(HttpStatus.CREATED).body(item);
     }
 
     /**

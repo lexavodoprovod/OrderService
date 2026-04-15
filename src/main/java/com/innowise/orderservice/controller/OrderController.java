@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,12 +37,12 @@ public class OrderController {
      * Places a new order in the system.
      *
      * @param orderRequestDto the order details containing user information and items.
-     * @return {@link ResponseEntity} containing the created {@link OrderResponseDto} and HTTP 200 OK.
+     * @return {@link ResponseEntity} containing the created {@link OrderResponseDto} and HTTP 201 CREATED.
      */
     @PostMapping
     public ResponseEntity<OrderResponseDto> addOrder(@Valid @RequestBody OrderRequestDto orderRequestDto) {
         OrderResponseDto orderResponseDto = orderService.createOrder(orderRequestDto);
-        return ResponseEntity.ok(orderResponseDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderResponseDto);
     }
 
     /**

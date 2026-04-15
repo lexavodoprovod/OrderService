@@ -167,8 +167,6 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderItemRequestDto> orderItemRequestDtos = orderRequestDto.getOrderItems();
 
-        order.getOrderItems().clear();
-
         Long totalPrice = calculateTotalPrice(orderItemRequestDtos, order);
         order.setTotalPrice(totalPrice);
 

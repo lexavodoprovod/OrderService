@@ -1,7 +1,6 @@
 package com.innowise.orderservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.innowise.orderservice.client.UserClient;
 import com.innowise.orderservice.dto.ItemDto;
 import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.repository.ItemDao;

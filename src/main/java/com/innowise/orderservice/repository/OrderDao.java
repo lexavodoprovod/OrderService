@@ -8,23 +8,18 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface OrderDao extends JpaRepository<Order, Long>, JpaSpecificationExecutor<Order> {
 
-    String SET_DELETED_TRUE_JPQL = """
-            update Order o
-            set deleted=true
-            where o.id = :id
-            """;
-
-    @Modifying
-    @Query(value = SET_DELETED_TRUE_JPQL)
-    int softDeleteById(@Param("id") Long id);
+    @EntityGraph(attributePaths = {"orderItems", "orderItems.item"})
+    Optional<Order> findById(Long id);
 
     @Override
-    @EntityGraph(attributePaths = {"orderItems"})
+    @EntityGraph(attributePaths = {"orderItems", "orderItems.item"})
     Page<Order> findAll(Specification<Order> spec,  Pageable pageable);
 
-    @EntityGraph(attributePaths = {"orderItems"})
+    @EntityGraph(attributePaths = {"orderItems", "orderItems.item"})
     Page<Order> findAllByUserIdAndDeletedFalse(Long userID, Pageable pageable);
 }

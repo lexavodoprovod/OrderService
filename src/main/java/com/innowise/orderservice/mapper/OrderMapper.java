@@ -19,5 +19,6 @@ public interface OrderMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "orderItems", ignore = true)
     void updateOrder(OrderRequestDto requestOrderDto, @MappingTarget Order order);
 }
