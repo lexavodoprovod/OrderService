@@ -1,5 +1,6 @@
-package com.innowise.orderservice.exception;
+package com.innowise.orderservice.exception.order;
 
+import com.innowise.orderservice.exception.BusinessException;
 import org.springframework.http.HttpStatus;
 
 public class OrderCancelledException extends BusinessException {

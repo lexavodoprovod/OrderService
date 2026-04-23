@@ -9,7 +9,11 @@ import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
 import com.innowise.orderservice.entity.Status;
-import com.innowise.orderservice.exception.*;
+import com.innowise.orderservice.exception.item.ItemNotFoundException;
+import com.innowise.orderservice.exception.order.OrderCancelledException;
+import com.innowise.orderservice.exception.order.OrderNotFoundException;
+import com.innowise.orderservice.exception.order.OrderNullParameterException;
+import com.innowise.orderservice.exception.order.OrderSoftDeleteException;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.repository.ItemDao;
 import com.innowise.orderservice.repository.OrderDao;
@@ -39,7 +43,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponseDto createOrder(OrderRequestDto orderRequestDto) {
         if(orderRequestDto == null){
-            throw new OrderNullParametrException();
+            throw new OrderNullParameterException();
         }
 
         Long userId = orderRequestDto.getUserId();
@@ -69,7 +73,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(readOnly = true)
     public OrderResponseDto getOrderById(Long id) {
         if(id == null){
-            throw new OrderNullParametrException();
+            throw new OrderNullParameterException();
         }
 
         Order order = orderDao.findById(id)
@@ -89,7 +93,7 @@ public class OrderServiceImpl implements OrderService {
     public Page<OrderResponseDto> getOrdersByUserId(Long userId, Pageable pageable) {
 
         if(pageable == null || userId == null){
-            throw new OrderNullParametrException();
+            throw new OrderNullParameterException();
         }
 
         Page<Order> ordersByUserIdPage = orderDao.findAllByUserIdAndDeletedFalse(userId, pageable);
@@ -104,7 +108,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Page<OrderResponseDto> getAllOrders(LocalDate from, LocalDate to, List<Status> statuses, Pageable pageable) {
         if(pageable == null){
-            throw new OrderNullParametrException();
+            throw new OrderNullParameterException();
         }
 
         Specification<Order> orderSpecification = Specification.allOf(
@@ -126,7 +130,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponseDto setPaidStatus(Long id) {
         if(id == null){
-            throw new OrderNullParametrException();
+            throw new OrderNullParameterException();
         }
 
         Order order = orderDao.findById(id)
@@ -153,7 +157,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponseDto updateOrder(Long orderId, OrderRequestDto orderRequestDto) {
         if(orderRequestDto == null){
-            throw new OrderNullParametrException();
+            throw new OrderNullParameterException();
         }
 
         Order order = orderDao.findById(orderId)
@@ -183,9 +187,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public boolean softdeleteOrder(Long id) {
+    public boolean softDeleteOrder(Long id) {
         if(id == null){
-            throw new OrderNullParametrException();
+            throw new OrderNullParameterException();
         }
 
         Order order = orderDao.findById(id)

@@ -75,7 +75,7 @@ class OrderControllerTest extends BaseIT{
             OrderItemRequestDto itemRequest = new OrderItemRequestDto(item.getId(), 2);
             OrderRequestDto orderRequest = new OrderRequestDto(userId, List.of(itemRequest));
 
-            wireMock.stubFor(get(urlEqualTo("/users/" + userId))
+            wireMock.stubFor(get(urlEqualTo(    "/users/" + userId))
                     .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
 
             mockMvc.perform(MockMvcRequestBuilders.post("/orders")

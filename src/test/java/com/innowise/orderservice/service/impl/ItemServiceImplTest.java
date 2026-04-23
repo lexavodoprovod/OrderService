@@ -2,9 +2,9 @@ package com.innowise.orderservice.service.impl;
 
 import com.innowise.orderservice.dto.ItemDto;
 import com.innowise.orderservice.entity.Item;
-import com.innowise.orderservice.exception.ItemExistException;
-import com.innowise.orderservice.exception.ItemNotFoundException;
-import com.innowise.orderservice.exception.ItemNullParameterException;
+import com.innowise.orderservice.exception.item.ItemExistException;
+import com.innowise.orderservice.exception.item.ItemNotFoundException;
+import com.innowise.orderservice.exception.item.ItemNullParameterException;
 import com.innowise.orderservice.mapper.ItemMapper;
 import com.innowise.orderservice.repository.ItemDao;
 import org.junit.jupiter.api.DisplayName;

@@ -9,7 +9,11 @@ import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
 import com.innowise.orderservice.entity.Status;
-import com.innowise.orderservice.exception.*;
+import com.innowise.orderservice.exception.item.ItemNotFoundException;
+import com.innowise.orderservice.exception.order.OrderCancelledException;
+import com.innowise.orderservice.exception.order.OrderNotFoundException;
+import com.innowise.orderservice.exception.order.OrderNullParameterException;
+import com.innowise.orderservice.exception.order.OrderSoftDeleteException;
 import com.innowise.orderservice.mapper.OrderMapper;
 import com.innowise.orderservice.repository.ItemDao;
 import com.innowise.orderservice.repository.OrderDao;
@@ -93,7 +97,7 @@ class OrderServiceImplTest {
         @Test
         @DisplayName("Should throw OrderNullParametrException when dto is null")
         void shouldThrowExceptionWhenRequestIsNull() {
-            assertThrows(OrderNullParametrException.class, () -> orderService.createOrder(null));
+            assertThrows(OrderNullParameterException.class, () -> orderService.createOrder(null));
             verifyNoInteractions(orderDao, itemDao, userClient);
         }
 
@@ -180,7 +184,7 @@ class OrderServiceImplTest {
         @Test
         @DisplayName("Should throw OrderNullParametrException when id is null")
         void shouldThrowExceptionWhenIdIsNull() {
-            assertThrows(OrderNullParametrException.class, () -> orderService.getOrderById(null));
+            assertThrows(OrderNullParameterException.class, () -> orderService.getOrderById(null));
 
             verifyNoInteractions(orderDao, orderMapper, userClient);
         }
@@ -251,7 +255,7 @@ class OrderServiceImplTest {
         @Test
         @DisplayName("Should throw OrderNullParametrException when pageable is null")
         void shouldThrowExceptionWhenPageableIsNull() {
-            assertThrows(OrderNullParametrException.class,
+            assertThrows(OrderNullParameterException.class,
                     () -> orderService.getAllOrders(null, null, null, null));
 
             verifyNoInteractions(orderDao, userClient);
@@ -306,7 +310,7 @@ class OrderServiceImplTest {
         @Test
         @DisplayName("Should throw OrderNullParametrException when id is null")
         void shouldThrowExceptionWhenIdIsNull() {
-            assertThrows(OrderNullParametrException.class, () -> orderService.setPaidStatus(null));
+            assertThrows(OrderNullParameterException.class, () -> orderService.setPaidStatus(null));
 
             verifyNoInteractions(orderDao, userClient);
         }
@@ -406,7 +410,7 @@ class OrderServiceImplTest {
         @Test
         @DisplayName("Should throw OrderNullParametrException when request is null")
         void shouldThrowExceptionWhenRequestIsNull() {
-            assertThrows(OrderNullParametrException.class,
+            assertThrows(OrderNullParameterException.class,
                     () -> orderService.updateOrder(1L, null));
         }
 
@@ -470,7 +474,7 @@ class OrderServiceImplTest {
 
             when(orderDao.findById(orderId)).thenReturn(Optional.of(order));
 
-            boolean result = orderService.softdeleteOrder(orderId);
+            boolean result = orderService.softDeleteOrder(orderId);
 
             assertTrue(result);
             assertTrue(order.isDeleted());
@@ -481,7 +485,7 @@ class OrderServiceImplTest {
         @Test
         @DisplayName("Should throw OrderNullParametrException when id is null")
         void shouldThrowExceptionWhenIdIsNull() {
-            assertThrows(OrderNullParametrException.class, () -> orderService.softdeleteOrder(null));
+            assertThrows(OrderNullParameterException.class, () -> orderService.softDeleteOrder(null));
 
             verifyNoInteractions(orderDao);
         }
@@ -492,7 +496,7 @@ class OrderServiceImplTest {
             Long orderId = 1L;
             when(orderDao.findById(orderId)).thenReturn(Optional.empty());
 
-            assertThrows(OrderNotFoundException.class, () -> orderService.softdeleteOrder(orderId));
+            assertThrows(OrderNotFoundException.class, () -> orderService.softDeleteOrder(orderId));
 
             verify(orderDao, times(1)).findById(orderId);
         }
@@ -507,7 +511,7 @@ class OrderServiceImplTest {
 
             when(orderDao.findById(orderId)).thenReturn(Optional.of(alreadyDeletedOrder));
 
-            assertThrows(OrderSoftDeleteException.class, () -> orderService.softdeleteOrder(orderId));
+            assertThrows(OrderSoftDeleteException.class, () -> orderService.softDeleteOrder(orderId));
 
             verify(orderDao, times(1)).findById(orderId);
         }

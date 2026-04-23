@@ -1,4 +1,6 @@
-package com.innowise.orderservice.exception;
+package com.innowise.orderservice.exception.order;
+
+import com.innowise.orderservice.exception.EntityNotFoundException;
 
 public class OrderNotFoundException extends EntityNotFoundException {
     public OrderNotFoundException(Long id) {

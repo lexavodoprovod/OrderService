@@ -125,7 +125,7 @@ public class OrderController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        boolean success = orderService.softdeleteOrder(id);
+        boolean success = orderService.softDeleteOrder(id);
         return success ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

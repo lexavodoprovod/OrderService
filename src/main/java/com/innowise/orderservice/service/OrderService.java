@@ -3,6 +3,7 @@ package com.innowise.orderservice.service;
 import com.innowise.orderservice.dto.OrderRequestDto;
 import com.innowise.orderservice.dto.OrderResponseDto;
 import com.innowise.orderservice.entity.Status;
+import com.innowise.orderservice.exception.order.OrderNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -30,7 +31,7 @@ public interface OrderService {
      *
      * @param id the unique identifier of the order to retrieve.
      * @return the {@link OrderResponseDto} containing order details and item information.
-     * @throws com.innowise.orderservice.exception.OrderNotFoundException if the order does not exist.
+     * @throws OrderNotFoundException if the order does not exist.
      */
     OrderResponseDto getOrderById(Long id);
 
@@ -81,5 +82,5 @@ public interface OrderService {
      * @param id the unique identifier of the order to mark as deleted.
      * @return true if the order was successfully marked as deleted, false if the order was not found.
      */
-    boolean softdeleteOrder(Long id);
+    boolean softDeleteOrder(Long id);
 }

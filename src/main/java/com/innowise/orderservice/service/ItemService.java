@@ -1,6 +1,7 @@
 package com.innowise.orderservice.service;
 
 import com.innowise.orderservice.dto.ItemDto;
+import com.innowise.orderservice.exception.item.ItemNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -23,7 +24,7 @@ public interface ItemService {
      *
      * @param id the unique identifier of the item to retrieve.
      * @return the {@link ItemDto} representing the found item.
-     * @throws com.innowise.orderservice.exception.ItemNotFoundException if no item is found with the given ID.
+     * @throws ItemNotFoundException if no item is found with the given ID.
      */
     ItemDto getItemById(Long id);
 
@@ -41,7 +42,7 @@ public interface ItemService {
      *
      * @param itemDto the data transfer object containing updated information and a valid ID.
      * @return the updated {@link ItemDto}.
-     * @throws com.innowise.orderservice.exception.ItemNotFoundException if the item to update does not exist.
+     * @throws ItemNotFoundException if the item to update does not exist.
      */
     ItemDto updateItem(ItemDto itemDto);
 
