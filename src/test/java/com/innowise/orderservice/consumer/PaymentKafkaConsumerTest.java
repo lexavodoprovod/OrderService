@@ -24,6 +24,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.verify;
@@ -58,7 +59,13 @@ class PaymentKafkaConsumerTest extends  BaseIT{
     @BeforeEach
     void waitForKafka() {
         registry.getListenerContainers().forEach(container -> {
-            ContainerTestUtils.waitForAssignment(container, 1);
+            await()
+                    .atMost(30, TimeUnit.SECONDS)
+                    .pollInterval(Duration.ofSeconds(1))
+                    .atMost(Duration.ofSeconds(30))
+                    .untilAsserted(() -> {
+                        ContainerTestUtils.waitForAssignment(container, 1);
+                    });
         });
     }
 
