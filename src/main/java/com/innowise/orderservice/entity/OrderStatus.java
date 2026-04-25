@@ -1,6 +1,6 @@
 package com.innowise.orderservice.entity;
 
-public enum Status {
+public enum OrderStatus {
     NEW,
     PAID,
     CANCELLED

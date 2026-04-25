@@ -1,7 +1,7 @@
 package com.innowise.orderservice.specification;
 
 import com.innowise.orderservice.entity.Order;
-import com.innowise.orderservice.entity.Status;
+import com.innowise.orderservice.entity.OrderStatus;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -34,7 +34,7 @@ public class OrderSpecification {
         };
     }
 
-    public static Specification<Order> byStatus(List<Status> statuses) {
+    public static Specification<Order> byStatus(List<OrderStatus> statuses) {
         return (root, query, criteriaBuilder) ->{
             if(statuses == null || statuses.isEmpty() ){
                 return criteriaBuilder.conjunction();

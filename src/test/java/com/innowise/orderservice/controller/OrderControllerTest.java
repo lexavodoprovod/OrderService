@@ -2,13 +2,13 @@ package com.innowise.orderservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.innowise.orderservice.dto.OrderItemRequestDto;
-import com.innowise.orderservice.dto.OrderRequestDto;
+import com.innowise.orderservice.dto.request.OrderItemRequestDto;
+import com.innowise.orderservice.dto.request.OrderRequestDto;
 import com.innowise.orderservice.dto.UserDto;
 import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
-import com.innowise.orderservice.entity.Status;
+import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.repository.ItemDao;
 import com.innowise.orderservice.repository.OrderDao;
 import com.innowise.orderservice.repository.OrderItemDao;
@@ -126,7 +126,7 @@ class OrderControllerTest extends BaseIT{
             Order order = orderDao.save(Order.builder()
                     .userId(userId)
                     .totalPrice(100000L)
-                    .status(Status.NEW)
+                    .status(OrderStatus.NEW)
                     .build());
 
             UserDto mockUser = UserDto.builder().id(userId).name("Nikita").build();
@@ -199,9 +199,9 @@ class OrderControllerTest extends BaseIT{
             Long firstUserId = 1L;
             Long secondUserId = 2L;
 
-            saveOrder(firstUserId, Status.NEW, LocalDate.now());
-            saveOrder(firstUserId, Status.PAID, LocalDate.now());
-            saveOrder(secondUserId, Status.NEW, LocalDate.now());
+            saveOrder(firstUserId, OrderStatus.NEW, LocalDate.now());
+            saveOrder(firstUserId, OrderStatus.PAID, LocalDate.now());
+            saveOrder(secondUserId, OrderStatus.NEW, LocalDate.now());
 
 
             wireMock.stubFor(get(urlEqualTo("/users/" + firstUserId))
@@ -221,8 +221,8 @@ class OrderControllerTest extends BaseIT{
         @Test
         @DisplayName("Should return all orders with default pagination")
         void shouldReturnAllOrdersSuccessfully() throws Exception {
-            saveOrder(10L, Status.NEW, LocalDate.now());
-            saveOrder(20L, Status.PAID, LocalDate.now());
+            saveOrder(10L, OrderStatus.NEW, LocalDate.now());
+            saveOrder(20L, OrderStatus.PAID, LocalDate.now());
 
             wireMock.stubFor(WireMock.get(urlMatching("/users/[0-9]+"))
                     .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
@@ -237,7 +237,7 @@ class OrderControllerTest extends BaseIT{
         @DisplayName("Should filter orders by date range using current time")
         void shouldFilterByDateRange() throws Exception {
             Long userId = 1L;
-            saveOrder(userId, Status.NEW, LocalDate.now());
+            saveOrder(userId, OrderStatus.NEW, LocalDate.now());
 
             String from = LocalDate.now().minusDays(1).toString();
             String to = LocalDate.now().plusDays(1).toString();
@@ -257,9 +257,9 @@ class OrderControllerTest extends BaseIT{
         void shouldFilterByStatuses() throws Exception {
             Long userId = 1L;
 
-            saveOrder(userId, Status.NEW, LocalDate.now());
-            saveOrder(userId, Status.PAID, LocalDate.now());
-            saveOrder(userId, Status.CANCELLED, LocalDate.now());
+            saveOrder(userId, OrderStatus.NEW, LocalDate.now());
+            saveOrder(userId, OrderStatus.PAID, LocalDate.now());
+            saveOrder(userId, OrderStatus.CANCELLED, LocalDate.now());
 
             wireMock.stubFor(WireMock.get(urlEqualTo("/users/" + userId))
                     .willReturn(okJson(objectMapper.writeValueAsString(new UserDto()))));
@@ -310,7 +310,7 @@ class OrderControllerTest extends BaseIT{
             Item laptop = itemDao.save(Item.builder().name("Laptop").price(100000L).build());
             Item mouse = itemDao.save(Item.builder().name("Mouse").price(2000L).build());
 
-            Order order = Order.builder().userId(userId).status(Status.NEW).totalPrice(100000L).build();
+            Order order = Order.builder().userId(userId).status(OrderStatus.NEW).totalPrice(100000L).build();
             order = orderDao.save(order);
             orderItemDao.save(OrderItem.builder().order(order).item(laptop).quantity(1).build());
 
@@ -381,7 +381,7 @@ class OrderControllerTest extends BaseIT{
             Long userId = 1L;
             Order order = orderDao.save(Order.builder()
                     .userId(userId)
-                    .status(Status.NEW)
+                    .status(OrderStatus.NEW)
                     .totalPrice(5000L)
                     .build());
 
@@ -395,7 +395,7 @@ class OrderControllerTest extends BaseIT{
                     .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("PAID"));
 
             Order updatedOrder = orderDao.findById(order.getId()).orElseThrow();
-            assertEquals(Status.PAID, updatedOrder.getStatus());
+            assertEquals(OrderStatus.PAID, updatedOrder.getStatus());
         }
 
         @Test
@@ -411,7 +411,7 @@ class OrderControllerTest extends BaseIT{
             Long userId = 1L;
             Order cancelledOrder = orderDao.save(Order.builder()
                     .userId(userId)
-                    .status(Status.CANCELLED)
+                    .status(OrderStatus.CANCELLED)
                     .totalPrice(100L)
                     .build());
 
@@ -436,7 +436,7 @@ class OrderControllerTest extends BaseIT{
         void shouldSoftDeleteOrderSuccessfully() throws Exception {
             Order order = Order.builder()
                     .userId(1L)
-                    .status(Status.NEW)
+                    .status(OrderStatus.NEW)
                     .totalPrice(1500L)
                     .deleted(false)
                     .build();
@@ -478,7 +478,7 @@ class OrderControllerTest extends BaseIT{
         }
     }
 
-    private void saveOrder(Long userId, Status status, LocalDate date) {
+    private void saveOrder(Long userId, OrderStatus status, LocalDate date) {
         Order order = Order.builder()
                 .userId(userId)
                 .status(status)

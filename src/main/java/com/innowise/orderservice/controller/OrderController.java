@@ -1,8 +1,8 @@
 package com.innowise.orderservice.controller;
 
-import com.innowise.orderservice.dto.OrderRequestDto;
-import com.innowise.orderservice.dto.OrderResponseDto;
-import com.innowise.orderservice.entity.Status;
+import com.innowise.orderservice.dto.request.OrderRequestDto;
+import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
+import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +77,7 @@ public class OrderController {
      *
      * @param from     optional start date (inclusive) in ISO format (yyyy-MM-dd).
      * @param to       optional end date (inclusive) in ISO format (yyyy-MM-dd).
-     * @param statuses optional list of {@link Status} values to filter by.
+     * @param statuses optional list of {@link OrderStatus} values to filter by.
      * @param pageable pagination parameters, defaults to size {@value #PAGINATION_SIZE} and sort by {@value #SORT_BY}.
      * @return {@link ResponseEntity} containing a {@link Page} of {@link OrderResponseDto}.
      */
@@ -85,7 +85,7 @@ public class OrderController {
     public ResponseEntity<Page<OrderResponseDto>> getAllOrders(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-            @RequestParam(required = false) List<Status> statuses,
+            @RequestParam(required = false) List<OrderStatus> statuses,
             @PageableDefault(size = PAGINATION_SIZE, sort = SORT_BY) Pageable pageable) {
 
         Page<OrderResponseDto> orderPage = orderService.getAllOrders(from, to, statuses, pageable);

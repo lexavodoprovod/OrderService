@@ -1,6 +1,6 @@
 package com.innowise.orderservice.mapper;
 
-import com.innowise.orderservice.dto.OrderItemResponseDto;
+import com.innowise.orderservice.dto.resoponse.OrderItemResponseDto;
 import com.innowise.orderservice.entity.OrderItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

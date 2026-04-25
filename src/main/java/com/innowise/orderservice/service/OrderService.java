@@ -1,8 +1,8 @@
 package com.innowise.orderservice.service;
 
-import com.innowise.orderservice.dto.OrderRequestDto;
-import com.innowise.orderservice.dto.OrderResponseDto;
-import com.innowise.orderservice.entity.Status;
+import com.innowise.orderservice.dto.request.OrderRequestDto;
+import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
+import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.exception.order.OrderNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,11 +48,11 @@ public interface OrderService {
      *
      * @param from     the start date of the period to filter orders (inclusive).
      * @param to       the end date of the period to filter orders (inclusive).
-     * @param statuses a list of {@link Status} to filter by; returns all if null or empty.
+     * @param statuses a list of {@link OrderStatus} to filter by; returns all if null or empty.
      * @param pageable pagination and sorting configuration.
      * @return a {@link Page} of {@link OrderResponseDto} matching the provided filters.
      */
-    Page<OrderResponseDto> getAllOrders(LocalDate from, LocalDate to, List<Status> statuses, Pageable pageable);
+    Page<OrderResponseDto> getAllOrders(LocalDate from, LocalDate to, List<OrderStatus> statuses, Pageable pageable);
 
     /**
      * Transitions the order status to PAID.
@@ -64,6 +64,15 @@ public interface OrderService {
      * @throws IllegalStateException if the order is in a state that cannot be transitioned to PAID.
      */
     OrderResponseDto setPaidStatus(Long id);
+
+    /**
+     * Transitions the order status to CANCELLED.
+     *
+     * @param id the unique identifier of the order to be cancelled.
+     * @return the {@link OrderResponseDto} with the updated status.
+     * @throws IllegalStateException if the order is in a state that cannot be transitioned to CANCELLED.
+     */
+    OrderResponseDto setCancelledStatus(Long id);
 
     /**
      * Updates an existing order's composition and re-calculates the total price.

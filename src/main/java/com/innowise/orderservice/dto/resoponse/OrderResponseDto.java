@@ -1,6 +1,7 @@
-package com.innowise.orderservice.dto;
+package com.innowise.orderservice.dto.resoponse;
 
-import com.innowise.orderservice.entity.Status;
+import com.innowise.orderservice.dto.UserDto;
+import com.innowise.orderservice.entity.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,7 @@ public class OrderResponseDto {
 
     private UserDto userDto;
 
-    private Status status;
+    private OrderStatus status;
 
     private Long totalPrice;
 

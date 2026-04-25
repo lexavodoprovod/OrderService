@@ -22,7 +22,7 @@ public class Order extends BaseEntity{
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private Status status = Status.NEW;
+    private OrderStatus status = OrderStatus.NEW;
 
     @Column(name = "total_price", nullable = false)
     private Long totalPrice;

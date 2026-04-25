@@ -1,14 +1,14 @@
 package com.innowise.orderservice.service.impl;
 
 import com.innowise.orderservice.client.UserClient;
-import com.innowise.orderservice.dto.OrderItemRequestDto;
-import com.innowise.orderservice.dto.OrderRequestDto;
-import com.innowise.orderservice.dto.OrderResponseDto;
+import com.innowise.orderservice.dto.request.OrderItemRequestDto;
+import com.innowise.orderservice.dto.request.OrderRequestDto;
+import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
 import com.innowise.orderservice.dto.UserDto;
 import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
-import com.innowise.orderservice.entity.Status;
+import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.exception.item.ItemNotFoundException;
 import com.innowise.orderservice.exception.order.OrderCancelledException;
 import com.innowise.orderservice.exception.order.OrderNotFoundException;
@@ -287,7 +287,7 @@ class OrderServiceImplTest {
             Order order = Order.builder()
                     .id(orderId)
                     .userId(userId)
-                    .status(Status.NEW)
+                    .status(OrderStatus.NEW)
                     .build();
 
             OrderResponseDto responseDto = new OrderResponseDto();
@@ -300,7 +300,7 @@ class OrderServiceImplTest {
             OrderResponseDto result = orderService.setPaidStatus(orderId);
 
             assertNotNull(result);
-            assertEquals(Status.PAID, order.getStatus());
+            assertEquals(OrderStatus.PAID, order.getStatus());
             assertEquals(userDto, result.getUserDto());
 
             verify(orderDao).findById(orderId);
@@ -333,7 +333,7 @@ class OrderServiceImplTest {
             Long orderId = 1L;
             Order cancelledOrder = Order.builder()
                     .id(orderId)
-                    .status(Status.CANCELLED)
+                    .status(OrderStatus.CANCELLED)
                     .build();
 
             when(orderDao.findById(orderId)).thenReturn(Optional.of(cancelledOrder));
@@ -352,7 +352,7 @@ class OrderServiceImplTest {
             Order alreadyPaidOrder = Order.builder()
                     .id(orderId)
                     .userId(userId)
-                    .status(Status.PAID)
+                    .status(OrderStatus.PAID)
                     .build();
 
             OrderResponseDto responseDto = new OrderResponseDto();
@@ -365,7 +365,7 @@ class OrderServiceImplTest {
             OrderResponseDto result = orderService.setPaidStatus(orderId);
 
             assertNotNull(result);
-            assertEquals(Status.PAID, alreadyPaidOrder.getStatus());
+            assertEquals(OrderStatus.PAID, alreadyPaidOrder.getStatus());
             verify(orderDao).findById(orderId);
         }
     }

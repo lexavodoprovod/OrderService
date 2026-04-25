@@ -1,14 +1,14 @@
 package com.innowise.orderservice.service.impl;
 
 import com.innowise.orderservice.client.UserClient;
-import com.innowise.orderservice.dto.OrderItemRequestDto;
-import com.innowise.orderservice.dto.OrderRequestDto;
-import com.innowise.orderservice.dto.OrderResponseDto;
+import com.innowise.orderservice.dto.request.OrderItemRequestDto;
+import com.innowise.orderservice.dto.request.OrderRequestDto;
+import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
 import com.innowise.orderservice.dto.UserDto;
 import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
-import com.innowise.orderservice.entity.Status;
+import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.exception.item.ItemNotFoundException;
 import com.innowise.orderservice.exception.order.OrderCancelledException;
 import com.innowise.orderservice.exception.order.OrderNotFoundException;
@@ -106,7 +106,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Page<OrderResponseDto> getAllOrders(LocalDate from, LocalDate to, List<Status> statuses, Pageable pageable) {
+    public Page<OrderResponseDto> getAllOrders(LocalDate from, LocalDate to, List<OrderStatus> statuses, Pageable pageable) {
         if(pageable == null){
             throw new OrderNullParameterException();
         }
@@ -136,15 +136,42 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderDao.findById(id)
                 .orElseThrow(() -> new OrderNotFoundException(id));
 
-        Status status = order.getStatus();
+        OrderStatus status = order.getStatus();
 
-        if(status == Status.CANCELLED){
+        if(status == OrderStatus.CANCELLED){
             throw new OrderCancelledException();
         }
 
         Long userId = order.getUserId();
 
-        order.setStatus(Status.PAID);
+        order.setStatus(OrderStatus.PAID);
+
+        OrderResponseDto orderResponseDto = orderMapper.toOrderDto(order);
+
+        enrichWithUser(orderResponseDto, userId);
+
+        return orderResponseDto;
+    }
+
+    @Override
+    @Transactional
+    public OrderResponseDto setCancelledStatus(Long id) {
+        if(id == null){
+            throw new OrderNullParameterException();
+        }
+
+        Order order = orderDao.findById(id)
+                .orElseThrow(() -> new OrderNotFoundException(id));
+
+        OrderStatus status = order.getStatus();
+
+        if(status == OrderStatus.CANCELLED){
+            throw new OrderCancelledException();
+        }
+
+        Long userId = order.getUserId();
+
+        order.setStatus(OrderStatus.PAID);
 
         OrderResponseDto orderResponseDto = orderMapper.toOrderDto(order);
 
