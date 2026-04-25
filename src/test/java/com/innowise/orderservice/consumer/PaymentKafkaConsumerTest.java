@@ -4,6 +4,7 @@ import com.innowise.orderservice.controller.BaseIT;
 import com.innowise.orderservice.dto.kafka.PaymentEventDto;
 import com.innowise.orderservice.entity.PaymentStatus;
 import com.innowise.orderservice.service.impl.OrderServiceImpl;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,7 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -36,15 +40,28 @@ class PaymentKafkaConsumerTest extends  BaseIT{
     @Value("${topic-name.status}")
     private String topicName;
 
-
     @Autowired
     private KafkaListenerEndpointRegistry registry;
 
-    @BeforeEach
-    void setUp() {
-        registry.getListenerContainers().forEach(container ->
-                ContainerTestUtils.waitForAssignment(container, 1));
+    @TestConfiguration
+    static class KafkaTestConfig {
+        @Bean
+        public NewTopic paymentStatusTopic(@Value("${topic-name.status}") String name) {
+            return TopicBuilder.name(name)
+                    .partitions(1)
+                    .replicas(1)
+                    .build();
+        }
     }
+
+
+    @BeforeEach
+    void waitForKafka() {
+        registry.getListenerContainers().forEach(container -> {
+            ContainerTestUtils.waitForAssignment(container, 1);
+        });
+    }
+
 
     @Nested
     @DisplayName("Consume Payment Event Tests")
