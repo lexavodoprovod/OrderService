@@ -9,10 +9,12 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", uses = {OrderItemMapper.class})
 public interface OrderMapper {
 
-    @Mapping(target = "userDto", ignore = true)
-    OrderResponseDto toOrderDto(Order order);
-
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "status", ignore = true)
+    @Mapping(target = "totalPrice", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
     Order toOrder(OrderRequestDto requestOrderDto);
+
+    @Mapping(target = "userDto", ignore = true)
+    OrderResponseDto toOrderDto(Order order);
 }

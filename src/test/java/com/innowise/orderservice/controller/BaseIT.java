@@ -9,8 +9,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
@@ -20,29 +18,28 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@Testcontainers
 @ActiveProfiles("test")
 public abstract class BaseIT {
 
+
     static final PostgreSQLContainer<?> postgres;
+
+    static final KafkaContainer kafka;
 
 
     static {
         postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-                .withDatabaseName("testdb")
-                .withUsername("testuser")
-                .withPassword("testpass")
-                .withStartupTimeout(Duration.ofMinutes(2));
+                .withStartupTimeout(Duration.ofMinutes(3));
+
+        kafka = new KafkaContainer(DockerImageName
+                .parse("confluentinc/cp-kafka:7.5.0"))
+                .withStartupTimeout(Duration.ofMinutes(3));
 
         postgres.start();
+        kafka.start();
     }
 
-    @Container
-    static KafkaContainer kafka = new KafkaContainer(DockerImageName
-            .parse("confluentinc/cp-kafka:7.5.0")
-            .asCompatibleSubstituteFor("apache/kafka"))
-            .withKraft()
-            .withStartupTimeout(Duration.ofMinutes(3));
+
 
 
 
