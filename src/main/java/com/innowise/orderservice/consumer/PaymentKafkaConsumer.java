@@ -1,7 +1,6 @@
 package com.innowise.orderservice.consumer;
 
 import com.innowise.orderservice.dto.kafka.PaymentEventDto;
-import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
 import com.innowise.orderservice.entity.PaymentStatus;
 import com.innowise.orderservice.service.impl.OrderServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +28,7 @@ public class PaymentKafkaConsumer {
 
         if(PaymentStatus.SUCCESS.equals(paymentStatus)) {
             log.info("Order status changed to PAID");
-            OrderResponseDto orderResponseDto = orderService.setPaidStatus(orderId);
+            orderService.setPaidStatus(orderId);
         }else{
             log.info("Order status changed to CANCELLED");
             orderService.setCancelledStatus(orderId);
