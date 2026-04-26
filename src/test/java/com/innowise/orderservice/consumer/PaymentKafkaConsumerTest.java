@@ -34,8 +34,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
     @Autowired
     private KafkaTemplate<String, PaymentEventDto> kafkaTemplate;
 
-    @MockitoBean
-    private OrderServiceImpl orderService;
+
 
     @Value("${topic-name.status}")
     private String topicName;
@@ -59,19 +58,22 @@ class PaymentKafkaConsumerTest extends  BaseIT{
     @DisplayName("Consume Payment Event Tests")
     class ConsumePaymentEventTests {
 
+        @MockitoBean
+        private OrderServiceImpl orderService;
+
         @Test
         @DisplayName("Should consume SUCCESS payment event")
         void shouldConsumeSuccessEvent() throws ExecutionException, InterruptedException {
             PaymentEventDto event = new PaymentEventDto(1L, PaymentStatus.SUCCESS);
             Long orderId = event.orderId();
-//            when(orderService.setPaidStatus(orderId)).thenReturn(new OrderResponseDto());
+            when(orderService.setPaidStatus(orderId)).thenReturn(new OrderResponseDto());
 
             kafkaTemplate.send(topicName, event).get();
 
 
             await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
                 log.info("Verified consumption of SUCCESS event");
-//                verify(orderService).setPaidStatus(event.orderId());
+                verify(orderService).setPaidStatus(event.orderId());
             });
         }
 
@@ -80,7 +82,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
         void shouldConsumeFailedEvent() throws ExecutionException, InterruptedException {
             PaymentEventDto event = new PaymentEventDto(2L, PaymentStatus.FAILED);
             Long orderId = event.orderId();
-//            when(orderService.setCancelledStatus(orderId)).thenReturn(new OrderResponseDto());
+            when(orderService.setCancelledStatus(orderId)).thenReturn(new OrderResponseDto());
 
             kafkaTemplate.send(topicName, event).get();
 
@@ -89,7 +91,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
                     .pollInterval(Duration.ofMillis(1000))
                     .untilAsserted(() -> {
                 log.info("Verified consumption of FAILED event");
-//                verify(orderService).setCancelledStatus(event.orderId());
+                verify(orderService).setCancelledStatus(event.orderId());
             });
         }
 

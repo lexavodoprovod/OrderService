@@ -28,10 +28,10 @@ public class PaymentKafkaConsumer {
 
         if(PaymentStatus.SUCCESS.equals(paymentStatus)) {
             log.info("Order status changed to PAID");
-//            orderService.setPaidStatus(orderId);
+            orderService.setPaidStatus(orderId);
         }else{
             log.info("Order status changed to CANCELLED");
-//            orderService.setCancelledStatus(orderId);
+            orderService.setCancelledStatus(orderId);
         }
     }
 }
