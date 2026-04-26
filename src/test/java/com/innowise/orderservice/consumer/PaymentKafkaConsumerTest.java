@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 
@@ -29,6 +30,7 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.*;
 
 @Slf4j
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class PaymentKafkaConsumerTest extends  BaseIT{
 
     @Autowired
@@ -55,37 +57,44 @@ class PaymentKafkaConsumerTest extends  BaseIT{
 
 
 
-    @Test
-    @DisplayName("Should consume SUCCESS payment event")
-    void shouldConsumeSuccessEvent() throws ExecutionException, InterruptedException {
-        PaymentEventDto event = new PaymentEventDto(1L, PaymentStatus.SUCCESS);
-        Long orderId = event.orderId();
-        when(orderService.setPaidStatus(orderId)).thenReturn(new OrderResponseDto());
+    @Nested
+    @DisplayName("Consume Payment Event Tests")
+    class ConsumePaymentEventTests {
 
-        kafkaTemplate.send(topicName, event).get();
+        @Test
+        @DisplayName("Should consume SUCCESS payment event")
+        void shouldConsumeSuccessEvent() throws ExecutionException, InterruptedException {
+            PaymentEventDto event = new PaymentEventDto(1L, PaymentStatus.SUCCESS);
+            Long orderId = event.orderId();
+            when(orderService.setPaidStatus(orderId)).thenReturn(new OrderResponseDto());
+
+            kafkaTemplate.send(topicName, event).get();
 
 
-        await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
-            log.info("Verified consumption of SUCCESS event");
-            verify(orderService).setPaidStatus(event.orderId());
-        });
-    }
+            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
+                log.info("Verified consumption of SUCCESS event");
+                verify(orderService).setPaidStatus(event.orderId());
+            });
+        }
 
-    @Test
-    @DisplayName("Should consume FAILED payment event")
-    void shouldConsumeFailedEvent() throws ExecutionException, InterruptedException {
-        PaymentEventDto event = new PaymentEventDto(2L, PaymentStatus.FAILED);
-        Long orderId = event.orderId();
-        when(orderService.setCancelledStatus(orderId)).thenReturn(new OrderResponseDto());
+        @Test
+        @DisplayName("Should consume FAILED payment event")
+        void shouldConsumeFailedEvent() throws ExecutionException, InterruptedException {
+            PaymentEventDto event = new PaymentEventDto(2L, PaymentStatus.FAILED);
+            Long orderId = event.orderId();
+            when(orderService.setCancelledStatus(orderId)).thenReturn(new OrderResponseDto());
 
-        kafkaTemplate.send(topicName, event).get();
+            kafkaTemplate.send(topicName, event).get();
 
-        await().atMost(Duration.ofSeconds(30))
-                .pollDelay(Duration.ofSeconds(1))
-                .pollInterval(Duration.ofMillis(1000))
-                .untilAsserted(() -> {
-                    log.info("Verified consumption of FAILED event");
-                    verify(orderService).setCancelledStatus(event.orderId());
-                });
+            await().atMost(Duration.ofSeconds(30))
+                    .pollDelay(Duration.ofSeconds(1))
+                    .pollInterval(Duration.ofMillis(1000))
+                    .untilAsserted(() -> {
+                log.info("Verified consumption of FAILED event");
+                verify(orderService).setCancelledStatus(event.orderId());
+            });
+        }
+
+
     }
 }
