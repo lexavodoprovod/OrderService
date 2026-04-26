@@ -4,7 +4,7 @@ import com.innowise.orderservice.controller.BaseIT;
 import com.innowise.orderservice.dto.kafka.PaymentEventDto;
 import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
 import com.innowise.orderservice.entity.PaymentStatus;
-import com.innowise.orderservice.service.impl.OrderServiceImpl;
+import com.innowise.orderservice.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +18,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 
@@ -30,14 +29,13 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.*;
 
 @Slf4j
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class PaymentKafkaConsumerTest extends  BaseIT{
 
     @Autowired
     private KafkaTemplate<String, PaymentEventDto> kafkaTemplate;
 
     @MockitoBean
-    private OrderServiceImpl orderService;
+    private OrderService orderService;
 
     @Value("${topic-name.status}")
     private String topicName;

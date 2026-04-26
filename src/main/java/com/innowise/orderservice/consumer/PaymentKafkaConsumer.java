@@ -2,7 +2,7 @@ package com.innowise.orderservice.consumer;
 
 import com.innowise.orderservice.dto.kafka.PaymentEventDto;
 import com.innowise.orderservice.entity.PaymentStatus;
-import com.innowise.orderservice.service.impl.OrderServiceImpl;
+import com.innowise.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentKafkaConsumer {
 
-    private final OrderServiceImpl orderService;
+    private final OrderService orderService;
 
     @KafkaListener(
             topics = "${topic-name.status}",
