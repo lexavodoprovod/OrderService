@@ -276,14 +276,16 @@ class OrderServiceImplTest {
     }
 
     @Nested
-    @DisplayName("Set Paid Status Tests")
-    class SetPaidStatusTests {
+    @DisplayName("Update Status Tests")
+    class UpdateTests {
 
         @Test
-        @DisplayName("Should successfully set PAID status and return DTO")
-        void shouldSetPaidStatusSuccessfully() {
+        @DisplayName("Should successfully update status and return enriched DTO")
+        void shouldUpdateStatusSuccessfully() {
             Long orderId = 1L;
             Long userId = 10L;
+            OrderStatus newStatus = OrderStatus.PAID;
+
             Order order = Order.builder()
                     .id(orderId)
                     .userId(userId)
@@ -297,22 +299,25 @@ class OrderServiceImplTest {
             when(orderMapper.toOrderDto(order)).thenReturn(responseDto);
             when(userClient.getUserById(userId)).thenReturn(userDto);
 
-            OrderResponseDto result = orderService.setPaidStatus(orderId);
+            OrderResponseDto result = orderService.updateStatus(orderId, newStatus);
 
             assertNotNull(result);
-            assertEquals(OrderStatus.PAID, order.getStatus());
+            assertEquals(newStatus, order.getStatus());
             assertEquals(userDto, result.getUserDto());
 
             verify(orderDao).findById(orderId);
+            verify(orderMapper).toOrderDto(order);
             verify(userClient).getUserById(userId);
         }
 
         @Test
-        @DisplayName("Should throw OrderNullParametrException when id is null")
+        @DisplayName("Should throw OrderNullParameterException when id is null")
         void shouldThrowExceptionWhenIdIsNull() {
-            assertThrows(OrderNullParameterException.class, () -> orderService.setPaidStatus(null));
+            assertThrows(OrderNullParameterException.class, () ->
+                    orderService.updateStatus(null, OrderStatus.PAID)
+            );
 
-            verifyNoInteractions(orderDao, userClient);
+            verifyNoInteractions(orderDao, orderMapper, userClient);
         }
 
         @Test
@@ -321,14 +326,16 @@ class OrderServiceImplTest {
             Long orderId = 1L;
             when(orderDao.findById(orderId)).thenReturn(Optional.empty());
 
-            assertThrows(OrderNotFoundException.class, () -> orderService.setPaidStatus(orderId));
+            assertThrows(OrderNotFoundException.class, () ->
+                    orderService.updateStatus(orderId, OrderStatus.PAID)
+            );
 
             verify(orderDao).findById(orderId);
             verifyNoInteractions(orderMapper, userClient);
         }
 
         @Test
-        @DisplayName("Should throw OrderCancelledException when trying to pay for a cancelled order")
+        @DisplayName("Should throw OrderCancelledException when trying to update a CANCELLED order")
         void shouldThrowOrderCancelledExceptionWhenOrderIsCancelled() {
             Long orderId = 1L;
             Order cancelledOrder = Order.builder()
@@ -338,21 +345,25 @@ class OrderServiceImplTest {
 
             when(orderDao.findById(orderId)).thenReturn(Optional.of(cancelledOrder));
 
-            assertThrows(OrderCancelledException.class, () -> orderService.setPaidStatus(orderId));
+            assertThrows(OrderCancelledException.class, () ->
+                    orderService.updateStatus(orderId, OrderStatus.PAID)
+            );
 
             verify(orderDao).findById(orderId);
             verifyNoInteractions(orderMapper, userClient);
         }
 
         @Test
-        @DisplayName("Should still return success even if order is already PAID (Idempotency)")
-        void shouldReturnSuccessWhenOrderAlreadyPaid() {
+        @DisplayName("Should update status even if it is the same as current (Idempotency)")
+        void shouldHandleIdempotentUpdate() {
             Long orderId = 1L;
             Long userId = 10L;
+            OrderStatus currentStatus = OrderStatus.PAID;
+
             Order alreadyPaidOrder = Order.builder()
                     .id(orderId)
                     .userId(userId)
-                    .status(OrderStatus.PAID)
+                    .status(currentStatus)
                     .build();
 
             OrderResponseDto responseDto = new OrderResponseDto();
@@ -362,11 +373,12 @@ class OrderServiceImplTest {
             when(orderMapper.toOrderDto(alreadyPaidOrder)).thenReturn(responseDto);
             when(userClient.getUserById(userId)).thenReturn(userDto);
 
-            OrderResponseDto result = orderService.setPaidStatus(orderId);
+            OrderResponseDto result = orderService.updateStatus(orderId, currentStatus);
 
             assertNotNull(result);
-            assertEquals(OrderStatus.PAID, alreadyPaidOrder.getStatus());
+            assertEquals(currentStatus, alreadyPaidOrder.getStatus());
             verify(orderDao).findById(orderId);
+            verify(userClient).getUserById(userId);
         }
     }
 

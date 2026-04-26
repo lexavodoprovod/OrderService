@@ -17,9 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -373,12 +371,14 @@ class OrderControllerTest extends BaseIT{
     }
 
     @Nested
-    @DisplayName("Set Paid Status Integration Tests")
-    class SetPaidStatusTests {
+    @DisplayName("Update Status Integration Tests")
+    class UpdateStatusTests {
+
+        private static final String STATUS_PATH = "/orders/{id}/status";
 
         @Test
-        @DisplayName("Should successfully change status to PAID and return 200")
-        void shouldSetStatusToPaidSuccessfully() throws Exception {
+        @DisplayName("Should successfully change status and return 200")
+        void shouldUpdateStatusSuccessfully() throws Exception {
             Long userId = 1L;
             Order order = orderDao.save(Order.builder()
                     .userId(userId)
@@ -387,11 +387,14 @@ class OrderControllerTest extends BaseIT{
                     .build());
 
             UserDto userDto = UserDto.builder().id(userId).name("Nikita").build();
+            OrderStatus newStatus = OrderStatus.PAID;
 
             wireMock.stubFor(WireMock.get(urlEqualTo("/users/" + userId))
                     .willReturn(okJson(objectMapper.writeValueAsString(userDto))));
 
-            mockMvc.perform(MockMvcRequestBuilders.patch("/orders/{id}/paid", order.getId()))
+            mockMvc.perform(MockMvcRequestBuilders.patch(STATUS_PATH, order.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(newStatus)))
                     .andExpect(MockMvcResultMatchers.status().isOk())
                     .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("PAID"));
 
@@ -400,9 +403,11 @@ class OrderControllerTest extends BaseIT{
         }
 
         @Test
-        @DisplayName("Should return 404 when trying to pay for non-existent order")
+        @DisplayName("Should return 404 when trying to update non-existent order")
         void shouldReturn404WhenOrderNotFound() throws Exception {
-            mockMvc.perform(MockMvcRequestBuilders.patch("/orders/{id}/paid", 999L))
+            mockMvc.perform(MockMvcRequestBuilders.patch(STATUS_PATH, 999L)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(OrderStatus.PAID)))
                     .andExpect(MockMvcResultMatchers.status().isNotFound());
         }
 
@@ -416,14 +421,26 @@ class OrderControllerTest extends BaseIT{
                     .totalPrice(100L)
                     .build());
 
-            mockMvc.perform(MockMvcRequestBuilders.patch("/orders/{id}/paid", cancelledOrder.getId()))
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
+            mockMvc.perform(MockMvcRequestBuilders.patch(STATUS_PATH, cancelledOrder.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(OrderStatus.PAID)))
+                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
         }
 
         @Test
         @DisplayName("Should return 400 when ID format is invalid")
         void shouldReturn400WhenIdIsInvalid() throws Exception {
-            mockMvc.perform(MockMvcRequestBuilders.patch("/orders/abc/paid"))
+            mockMvc.perform(MockMvcRequestBuilders.patch("/orders/abc/status")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(OrderStatus.PAID)))
+                    .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should return 400 when request body is missing")
+        void shouldReturn400WhenBodyIsMissing() throws Exception {
+            mockMvc.perform(MockMvcRequestBuilders.patch(STATUS_PATH, 1L)
+                            .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(MockMvcResultMatchers.status().isBadRequest());
         }
     }

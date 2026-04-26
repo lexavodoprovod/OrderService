@@ -128,7 +128,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponseDto setPaidStatus(Long id) {
+    public OrderResponseDto updateStatus(Long id, OrderStatus orderStatus) {
         if(id == null){
             throw new OrderNullParameterException();
         }
@@ -144,7 +144,7 @@ public class OrderServiceImpl implements OrderService {
 
         Long userId = order.getUserId();
 
-        order.setStatus(OrderStatus.PAID);
+        order.setStatus(orderStatus);
 
         OrderResponseDto orderResponseDto = orderMapper.toOrderDto(order);
 
@@ -153,32 +153,7 @@ public class OrderServiceImpl implements OrderService {
         return orderResponseDto;
     }
 
-    @Override
-    @Transactional
-    public OrderResponseDto setCancelledStatus(Long id) {
-        if(id == null){
-            throw new OrderNullParameterException();
-        }
 
-        Order order = orderDao.findById(id)
-                .orElseThrow(() -> new OrderNotFoundException(id));
-
-        OrderStatus status = order.getStatus();
-
-        if(status == OrderStatus.CANCELLED){
-            throw new OrderCancelledException();
-        }
-
-        Long userId = order.getUserId();
-
-        order.setStatus(OrderStatus.PAID);
-
-        OrderResponseDto orderResponseDto = orderMapper.toOrderDto(order);
-
-        enrichWithUser(orderResponseDto, userId);
-
-        return orderResponseDto;
-    }
 
     @Override
     @Transactional

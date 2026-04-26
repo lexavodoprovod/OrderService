@@ -4,6 +4,8 @@ import com.innowise.orderservice.dto.request.OrderRequestDto;
 import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
 import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.exception.order.OrderNotFoundException;
+import com.innowise.orderservice.exception.order.OrderCancelledException;
+import com.innowise.orderservice.exception.order.OrderNullParameterException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -54,25 +56,18 @@ public interface OrderService {
      */
     Page<OrderResponseDto> getAllOrders(LocalDate from, LocalDate to, List<OrderStatus> statuses, Pageable pageable);
 
-    /**
-     * Transitions the order status to PAID.
-     * This method typically includes business logic validation to ensure
-     * the transition from the current status is valid.
-     *
-     * @param id the unique identifier of the order to be paid.
-     * @return the {@link OrderResponseDto} with the updated status.
-     * @throws IllegalStateException if the order is in a state that cannot be transitioned to PAID.
-     */
-    OrderResponseDto setPaidStatus(Long id);
 
     /**
-     * Transitions the order status to CANCELLED.
+     * Updates the status of an existing order and enriches the result with user information.
      *
-     * @param id the unique identifier of the order to be cancelled.
-     * @return the {@link OrderResponseDto} with the updated status.
-     * @throws IllegalStateException if the order is in a state that cannot be transitioned to CANCELLED.
+     * @param id          the unique identifier of the order to update; must not be null.
+     * @param orderStatus the new {@link OrderStatus} to set for the order.
+     * @return an {@link OrderResponseDto} containing the updated order details and enriched user info.
+     * @throws OrderNullParameterException if the provided id is null.
+     * @throws OrderNotFoundException      if no order is found with the given id.
+     * @throws OrderCancelledException     if the order is already cancelled and cannot be updated.
      */
-    OrderResponseDto setCancelledStatus(Long id);
+    OrderResponseDto updateStatus(Long id, OrderStatus orderStatus);
 
     /**
      * Updates an existing order's composition and re-calculates the total price.

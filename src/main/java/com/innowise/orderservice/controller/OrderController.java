@@ -106,14 +106,17 @@ public class OrderController {
     }
 
     /**
-     * Updates the status of an existing order to PAID.
+     * Updates the status of the specified order.
      *
-     * @param id the unique identifier of the order to be marked as paid.
-     * @return {@link ResponseEntity} with the updated {@link OrderResponseDto}.
+     * @param id     the unique identifier of the order to be updated.
+     * @param status the new {@link OrderStatus} to be applied to the order.
+     * @return a {@link ResponseEntity} containing the updated {@link OrderResponseDto}.
      */
-    @PatchMapping("/{id}/paid")
-    public ResponseEntity<OrderResponseDto> setPaidStatus(@PathVariable Long id) {
-        OrderResponseDto orderResponseDto = orderService.setPaidStatus(id);
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<OrderResponseDto> setPaidStatus(
+            @PathVariable Long id,
+            @RequestBody OrderStatus status) {
+        OrderResponseDto orderResponseDto = orderService.updateStatus(id, status);
         return ResponseEntity.ok(orderResponseDto);
     }
 

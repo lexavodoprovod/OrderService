@@ -2,28 +2,20 @@ package com.innowise.orderservice.consumer;
 
 import com.innowise.orderservice.controller.BaseIT;
 import com.innowise.orderservice.dto.kafka.PaymentEventDto;
-import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
-import com.innowise.orderservice.entity.Order;
+import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.entity.PaymentStatus;
 import com.innowise.orderservice.service.OrderService;
-import com.innowise.orderservice.service.impl.OrderServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.kafka.config.TopicBuilder;
+
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 
 import java.time.Duration;
@@ -44,21 +36,6 @@ class PaymentKafkaConsumerTest extends  BaseIT{
     @Value("${topic-name.status}")
     private String topicName;
 
-
-
-    @TestConfiguration
-    static class KafkaTestConfig {
-        @Bean
-        public NewTopic paymentStatusTopic(@Value("${topic-name.status}") String name) {
-            return TopicBuilder.name(name)
-                    .partitions(1)
-                    .replicas(1)
-                    .build();
-        }
-    }
-
-
-
     @Nested
     @DisplayName("Consume Payment Event Tests")
     class ConsumePaymentEventTests {
@@ -77,7 +54,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
                     .pollInterval(Duration.ofMillis(1000))
                     .untilAsserted(() -> {
                         log.info("Trying to verified consumption of SUCCESS event");
-                        verify(orderService, atLeastOnce()).setPaidStatus(orderId);
+                        verify(orderService, atLeastOnce()).updateStatus(orderId, OrderStatus.PAID);
                         log.info("Verified consumption of SUCCESS event");
                     });
         }
@@ -95,7 +72,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
                     .pollInterval(Duration.ofMillis(1000))
                     .untilAsserted(() -> {
                         log.info("Trying to verified consumption of FAILED event");
-                        verify(orderService, atLeastOnce()).setCancelledStatus(orderId);
+                        verify(orderService, atLeastOnce()).updateStatus(orderId, OrderStatus.CANCELLED);
                         log.info("Verified consumption of FAILED event");
             });
         }
