@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PaymentKafkaConsumer {
 
-    private final OrderService orderService;
+    private OrderService orderService;
 
     @KafkaListener(
             topics = "${topic-name.status}",

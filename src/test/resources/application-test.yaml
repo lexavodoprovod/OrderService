@@ -3,3 +3,9 @@ spring:
     bootstrap-servers:
     producer:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+  cloud:
+    discovery:
+      enabled: false
+eureka:
+  client:
+    enabled: false
