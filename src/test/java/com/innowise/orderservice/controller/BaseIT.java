@@ -1,6 +1,7 @@
 package com.innowise.orderservice.controller;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.innowise.orderservice.service.OrderService;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
