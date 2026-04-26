@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://order-db:5432/${DB_NAME}
+  kafka:
+    bootstrap-servers: kafka:9092
+server:
+  port: 8080

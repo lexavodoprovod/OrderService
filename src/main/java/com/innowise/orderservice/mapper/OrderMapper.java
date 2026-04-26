@@ -1,0 +1,20 @@
+package com.innowise.orderservice.mapper;
+
+import com.innowise.orderservice.dto.request.OrderRequestDto;
+import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
+import com.innowise.orderservice.entity.Order;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+@Mapper(componentModel = "spring", uses = {OrderItemMapper.class})
+public interface OrderMapper {
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "totalPrice", ignore = true)
+    @Mapping(target = "deleted", ignore = true)
+    Order toOrder(OrderRequestDto requestOrderDto);
+
+    @Mapping(target = "userDto", ignore = true)
+    OrderResponseDto toOrderDto(Order order);
+}
