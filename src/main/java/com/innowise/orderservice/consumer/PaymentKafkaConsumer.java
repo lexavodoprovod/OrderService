@@ -1,13 +1,16 @@
 package com.innowise.orderservice.consumer;
 
 import com.innowise.orderservice.dto.kafka.PaymentEventDto;
+import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
 import com.innowise.orderservice.entity.PaymentStatus;
 import com.innowise.orderservice.service.impl.OrderServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
+@Slf4j
 @Component
 public class PaymentKafkaConsumer {
 
@@ -19,17 +22,16 @@ public class PaymentKafkaConsumer {
             containerFactory = "kafkaListenerFactory"
     )
     public void consumePaymentEvent(PaymentEventDto paymentEventDto) {
-        System.out.println("Received payment event for order %s: %s"
-                .formatted(paymentEventDto.orderId(), paymentEventDto.status()));
+        log.info("Received payment event for order {}: {}", paymentEventDto.orderId(), paymentEventDto.status());
 
         Long orderId = paymentEventDto.orderId();
         PaymentStatus paymentStatus = paymentEventDto.status();
 
         if(PaymentStatus.SUCCESS.equals(paymentStatus)) {
-            System.out.println("Should change order status to PAID");
-            orderService.setPaidStatus(orderId);
+            log.info("Order status changed to PAID");
+            OrderResponseDto orderResponseDto = orderService.setPaidStatus(orderId);
         }else{
-            System.out.println("Should change order status to CANCELLED");
+            log.info("Order status changed to CANCELLED");
             orderService.setCancelledStatus(orderId);
         }
     }
