@@ -32,7 +32,7 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.*;
 
 @Slf4j
-@DirtiesContext
+
 class PaymentKafkaConsumerTest extends  BaseIT{
 
     @Autowired
