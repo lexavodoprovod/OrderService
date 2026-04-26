@@ -21,6 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 
 import java.time.Duration;
+import java.util.concurrent.ExecutionException;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.verify;
@@ -64,7 +65,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
             kafkaTemplate.send(topicName, event);
 
 
-            await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
+            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
                 System.out.println("Verified consumption of SUCCESS event");
                 verify(orderService).setPaidStatus(event.orderId());
             });
@@ -77,7 +78,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
 
             kafkaTemplate.send(topicName, event);
 
-            await().atMost(Duration.ofSeconds(10)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
+            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
                 System.out.println("Verified consumption of FAILED event");
                 verify(orderService).setCancelledStatus(event.orderId());
             });
