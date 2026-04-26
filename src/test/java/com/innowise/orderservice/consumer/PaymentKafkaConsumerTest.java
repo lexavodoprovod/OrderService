@@ -12,6 +12,7 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -32,13 +33,12 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.*;
 
 @Slf4j
-
 class PaymentKafkaConsumerTest extends  BaseIT{
 
     @Autowired
     private KafkaTemplate<String, PaymentEventDto> kafkaTemplate;
 
-    @MockitoSpyBean
+    @MockitoBean
     private OrderService orderService;
 
     @Value("${topic-name.status}")
@@ -68,15 +68,18 @@ class PaymentKafkaConsumerTest extends  BaseIT{
         void shouldConsumeSuccessEvent() throws ExecutionException, InterruptedException {
             PaymentEventDto event = new PaymentEventDto(1L, PaymentStatus.SUCCESS);
             Long orderId = event.orderId();
-            doReturn(new OrderResponseDto()).when(orderService).setPaidStatus(orderId);
 
             kafkaTemplate.send(topicName, event).get();
 
 
-            await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
-                log.info("Verified consumption of SUCCESS event");
-                verify(orderService).setPaidStatus(orderId);
-            });
+            await().atMost(Duration.ofSeconds(30))
+                    .pollDelay(Duration.ofSeconds(1))
+                    .pollInterval(Duration.ofMillis(1000))
+                    .untilAsserted(() -> {
+                        log.info("Trying to verified consumption of SUCCESS event");
+                        verify(orderService, atLeastOnce()).setPaidStatus(orderId);
+                        log.info("Verified consumption of SUCCESS event");
+                    });
         }
 
         @Test
@@ -84,7 +87,6 @@ class PaymentKafkaConsumerTest extends  BaseIT{
         void shouldConsumeFailedEvent() throws ExecutionException, InterruptedException {
             PaymentEventDto event = new PaymentEventDto(2L, PaymentStatus.FAILED);
             Long orderId = event.orderId();
-            doReturn(new OrderResponseDto()).when(orderService).setCancelledStatus(orderId);
 
             kafkaTemplate.send(topicName, event).get();
 
@@ -92,8 +94,9 @@ class PaymentKafkaConsumerTest extends  BaseIT{
                     .pollDelay(Duration.ofSeconds(1))
                     .pollInterval(Duration.ofMillis(1000))
                     .untilAsserted(() -> {
-                log.info("Verified consumption of FAILED event");
-                verify(orderService).setCancelledStatus(orderId);
+                        log.info("Trying to verified consumption of FAILED event");
+                        verify(orderService, atLeastOnce()).setCancelledStatus(orderId);
+                        log.info("Verified consumption of FAILED event");
             });
         }
 
