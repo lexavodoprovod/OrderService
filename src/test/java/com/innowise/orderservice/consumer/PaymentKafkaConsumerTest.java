@@ -5,7 +5,6 @@ import com.innowise.orderservice.dto.kafka.PaymentEventDto;
 import com.innowise.orderservice.entity.PaymentStatus;
 import com.innowise.orderservice.service.impl.OrderServiceImpl;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,16 +14,13 @@ import org.springframework.beans.factory.annotation.Value;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.test.utils.ContainerTestUtils;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.verify;
@@ -41,8 +37,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
     @Value("${topic-name.status}")
     private String topicName;
 
-    @Autowired
-    private KafkaListenerEndpointRegistry registry;
+
 
     @TestConfiguration
     static class KafkaTestConfig {
@@ -55,19 +50,6 @@ class PaymentKafkaConsumerTest extends  BaseIT{
         }
     }
 
-
-    @BeforeEach
-    void waitForKafka() {
-        registry.getListenerContainers().forEach(container -> {
-            await()
-                    .atMost(30, TimeUnit.SECONDS)
-                    .pollInterval(Duration.ofSeconds(1))
-                    .atMost(Duration.ofSeconds(30))
-                    .untilAsserted(() -> {
-                        ContainerTestUtils.waitForAssignment(container, 1);
-                    });
-        });
-    }
 
 
     @Nested
