@@ -59,10 +59,10 @@ class PaymentKafkaConsumerTest extends  BaseIT{
 
         @Test
         @DisplayName("Should consume SUCCESS payment event")
-        void shouldConsumeSuccessEvent() {
+        void shouldConsumeSuccessEvent() throws ExecutionException, InterruptedException {
             PaymentEventDto event = new PaymentEventDto(1L, PaymentStatus.SUCCESS);
 
-            kafkaTemplate.send(topicName, event);
+            kafkaTemplate.send(topicName, event).get();
 
 
             await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
@@ -73,10 +73,10 @@ class PaymentKafkaConsumerTest extends  BaseIT{
 
         @Test
         @DisplayName("Should consume FAILED payment event")
-        void shouldConsumeFailedEvent() {
+        void shouldConsumeFailedEvent() throws ExecutionException, InterruptedException {
             PaymentEventDto event = new PaymentEventDto(2L, PaymentStatus.FAILED);
 
-            kafkaTemplate.send(topicName, event);
+            kafkaTemplate.send(topicName, event).get();
 
             await().atMost(Duration.ofSeconds(30)).pollInterval(Duration.ofMillis(1000)).untilAsserted(() -> {
                 System.out.println("Verified consumption of FAILED event");
