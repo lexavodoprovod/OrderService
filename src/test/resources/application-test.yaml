@@ -6,6 +6,11 @@ spring:
   cloud:
     discovery:
       enabled: false
+    openfeign:
+      client:
+        config:
+          user-service:
+            url: http://localhost
 eureka:
   client:
     enabled: false

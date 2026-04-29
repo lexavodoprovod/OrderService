@@ -113,7 +113,7 @@ public class OrderController {
      * @return a {@link ResponseEntity} containing the updated {@link OrderResponseDto}.
      */
     @PatchMapping("/{id}/status")
-    public ResponseEntity<OrderResponseDto> setPaidStatus(
+    public ResponseEntity<OrderResponseDto> updateStatus(
             @PathVariable Long id,
             @RequestBody OrderStatus status) {
         OrderResponseDto orderResponseDto = orderService.updateStatus(id, status);

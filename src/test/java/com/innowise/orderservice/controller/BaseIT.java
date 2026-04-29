@@ -56,7 +56,7 @@ public abstract class BaseIT {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("user-service.url", wireMock::baseUrl);
+        registry.add("spring.cloud.openfeign.client.config.user-service.url", wireMock::baseUrl);
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
     }
 }
