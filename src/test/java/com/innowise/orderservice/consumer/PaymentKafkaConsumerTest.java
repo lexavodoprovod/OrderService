@@ -2,6 +2,7 @@ package com.innowise.orderservice.consumer;
 
 import com.innowise.orderservice.controller.BaseIT;
 import com.innowise.orderservice.dto.kafka.PaymentEventDto;
+import com.innowise.orderservice.entity.EventType;
 import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.entity.PaymentStatus;
 import com.innowise.orderservice.service.OrderService;
@@ -43,7 +44,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
         @Test
         @DisplayName("Should consume SUCCESS payment event")
         void shouldConsumeSuccessEvent() throws ExecutionException, InterruptedException {
-            PaymentEventDto event = new PaymentEventDto(1L, PaymentStatus.SUCCESS);
+            PaymentEventDto event = new PaymentEventDto(EventType.CREATE_PAYMENT,"1L", 1L, PaymentStatus.SUCCESS);
             Long orderId = event.orderId();
 
             kafkaTemplate.send(topicName, event).get();
@@ -62,7 +63,7 @@ class PaymentKafkaConsumerTest extends  BaseIT{
         @Test
         @DisplayName("Should consume FAILED payment event")
         void shouldConsumeFailedEvent() throws ExecutionException, InterruptedException {
-            PaymentEventDto event = new PaymentEventDto(2L, PaymentStatus.FAILED);
+            PaymentEventDto event = new PaymentEventDto(EventType.CREATE_PAYMENT,"1L", 1L, PaymentStatus.FAILED);
             Long orderId = event.orderId();
 
             kafkaTemplate.send(topicName, event).get();
