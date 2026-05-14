@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.innowise.orderservice.dto.request.OrderItemRequestDto;
 import com.innowise.orderservice.dto.request.OrderRequestDto;
 import com.innowise.orderservice.dto.UserDto;
+import com.innowise.orderservice.dto.request.UpdateStatusRequest;
 import com.innowise.orderservice.entity.Item;
 import com.innowise.orderservice.entity.Order;
 import com.innowise.orderservice.entity.OrderItem;
@@ -387,14 +388,14 @@ class OrderControllerTest extends BaseIT{
                     .build());
 
             UserDto userDto = UserDto.builder().id(userId).name("Nikita").build();
-            OrderStatus newStatus = OrderStatus.PAID;
+            UpdateStatusRequest statusRequest = new UpdateStatusRequest(OrderStatus.PAID);
 
             wireMock.stubFor(WireMock.get(urlEqualTo("/users/" + userId))
                     .willReturn(okJson(objectMapper.writeValueAsString(userDto))));
 
             mockMvc.perform(MockMvcRequestBuilders.patch(STATUS_PATH, order.getId())
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(newStatus)))
+                            .content(objectMapper.writeValueAsString(statusRequest)))
                     .andExpect(MockMvcResultMatchers.status().isOk())
                     .andExpect(MockMvcResultMatchers.jsonPath("$.status").value("PAID"));
 
@@ -405,9 +406,10 @@ class OrderControllerTest extends BaseIT{
         @Test
         @DisplayName("Should return 404 when trying to update non-existent order")
         void shouldReturn404WhenOrderNotFound() throws Exception {
+            UpdateStatusRequest statusRequest = new UpdateStatusRequest(OrderStatus.PAID);
             mockMvc.perform(MockMvcRequestBuilders.patch(STATUS_PATH, 999L)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(OrderStatus.PAID)))
+                            .content(objectMapper.writeValueAsString(statusRequest)))
                     .andExpect(MockMvcResultMatchers.status().isNotFound());
         }
 
