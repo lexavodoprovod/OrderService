@@ -1,0 +1,13 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://order-db:5432/${DB_NAME}
+  kafka:
+    bootstrap-servers: kafka-service:9092
+eureka:
+  instance:
+    hostname: ${spring.application.name}
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka/
+server:
+  port: 8080
