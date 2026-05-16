@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class UpdateStatusRequest {
+public class UpdateOrderStatusRequest {
     @NotNull
     private OrderStatus orderStatus;
 }

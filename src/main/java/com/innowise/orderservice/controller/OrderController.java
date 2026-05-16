@@ -1,7 +1,7 @@
 package com.innowise.orderservice.controller;
 
 import com.innowise.orderservice.dto.request.OrderRequestDto;
-import com.innowise.orderservice.dto.request.UpdateStatusRequest;
+import com.innowise.orderservice.dto.request.UpdateOrderStatusRequest;
 import com.innowise.orderservice.dto.resoponse.OrderResponseDto;
 import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.service.OrderService;
@@ -116,7 +116,7 @@ public class OrderController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<OrderResponseDto> updateStatus(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateStatusRequest status) {
+            @Valid @RequestBody UpdateOrderStatusRequest status) {
         OrderResponseDto orderResponseDto = orderService.updateStatus(id, status.getOrderStatus());
         return ResponseEntity.ok(orderResponseDto);
     }

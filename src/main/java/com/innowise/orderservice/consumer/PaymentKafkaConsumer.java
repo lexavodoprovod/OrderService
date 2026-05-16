@@ -28,11 +28,11 @@ public class PaymentKafkaConsumer {
         PaymentStatus paymentStatus = paymentEventDto.status();
 
         if(PaymentStatus.SUCCESS.equals(paymentStatus)) {
-            log.info("Order status changed to PAID");
             orderService.updateStatus(orderId, OrderStatus.PAID);
+            log.info("Order status changed to PAID");
         }else{
-            log.info("Order status changed to CANCELLED");
             orderService.updateStatus(orderId, OrderStatus.CANCELLED);
+            log.info("Order status changed to CANCELLED");
         }
     }
 }
