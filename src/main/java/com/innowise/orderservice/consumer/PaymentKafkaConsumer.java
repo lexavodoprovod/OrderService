@@ -1,6 +1,7 @@
 package com.innowise.orderservice.consumer;
 
 import com.innowise.orderservice.dto.kafka.PaymentEventDto;
+import com.innowise.orderservice.entity.EventType;
 import com.innowise.orderservice.entity.OrderStatus;
 import com.innowise.orderservice.entity.PaymentStatus;
 import com.innowise.orderservice.service.OrderService;
@@ -18,7 +19,7 @@ public class PaymentKafkaConsumer {
 
     @KafkaListener(
             topics = "${topic-name.status}",
-            groupId = "order-consumer-1",
+            groupId = "order-consumer-group",
             containerFactory = "kafkaListenerFactory"
     )
     public void consumePaymentEvent(PaymentEventDto paymentEventDto) {
@@ -26,13 +27,20 @@ public class PaymentKafkaConsumer {
 
         Long orderId = paymentEventDto.orderId();
         PaymentStatus paymentStatus = paymentEventDto.status();
-
-        if(PaymentStatus.SUCCESS.equals(paymentStatus)) {
-            orderService.updateStatus(orderId, OrderStatus.PAID);
-            log.info("Order status changed to PAID");
-        }else{
-            orderService.updateStatus(orderId, OrderStatus.CANCELLED);
-            log.info("Order status changed to CANCELLED");
+        EventType eventType = paymentEventDto.eventType();
+        switch (eventType){
+            case CREATE_PAYMENT:
+                if(PaymentStatus.SUCCESS.equals(paymentStatus)) {
+                    orderService.updateStatus(orderId, OrderStatus.PAID);
+                    log.info("Order status changed to PAID");
+                }else{
+                    orderService.updateStatus(orderId, OrderStatus.CANCELLED);
+                    log.info("Order status changed to CANCELLED");
+                }
+                break;
+            default:
+                log.error("Unsupported payment event type");
         }
+
     }
 }
