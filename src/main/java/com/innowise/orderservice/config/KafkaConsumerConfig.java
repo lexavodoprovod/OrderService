@@ -38,8 +38,7 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, PaymentEventDto> consumerFactory() {
         JsonDeserializer<PaymentEventDto> jsonDeserializer = new JsonDeserializer<>(PaymentEventDto.class);
-        jsonDeserializer.addTrustedPackages("*");
-
+        jsonDeserializer.setUseTypeHeaders(false);
         return new DefaultKafkaConsumerFactory<>(
                 consumerConfig(),
                 new StringDeserializer(),
